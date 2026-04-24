@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#4338ca">
+    <meta name="description" content="Python 함수의 어떤 부분이 MCP 서버의 description / inputSchema / outputSchema에 어떻게 매핑되는지 한눈에 이해합니다.">
+    <title>05. FastMCP Tool 구현 & 스키마 매핑 · Python MCP 서버 가이드</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <script defer src="assets/js/main.js"></script>
+</head>
+<body>
+<div class="progress-bar" aria-hidden="true"></div>
+
+<header class="topbar" role="banner">
+    <button class="icon-btn" type="button" data-sidebar-open aria-label="메뉴 열기">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+    <span class="brand">05. Tool 구현</span>
+    <button class="icon-btn" type="button" data-theme-toggle aria-label="다크 모드 전환" aria-pressed="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
+    </button>
+</header>
+
+<div class="sidebar-backdrop" data-sidebar-close aria-hidden="true"></div>
+
+<div class="layout">
+    <aside class="sidebar" id="sidebar" aria-label="가이드 목차">
+        <div class="sidebar-header">
+            <h2 class="sidebar-title">Python MCP 서버<br>가이드라인</h2>
+            <p class="sidebar-sub">초보자를 위한 한국어 단계별 가이드</p>
+        </div>
+        <nav aria-label="목차">
+            <ol>
+                <li><a href="index.html"><span class="num">00</span><span class="title">시작하기<span class="sub">가이드 소개 · 학습 경로</span></span></a></li>
+                <li><a href="01-mcp-overview.html"><span class="num">01</span><span class="title">MCP 개요와 필요성<span class="sub">무엇이며 왜 쓰는가</span></span></a></li>
+                <li><a href="02-dev-setup.html"><span class="num">02</span><span class="title">개발 환경 설정<span class="sub">Python · 에디터 · 패키지</span></span></a></li>
+                <li><a href="03-python-basics.html"><span class="num">03</span><span class="title">Python 기초 문법<span class="sub">꼭 필요한 만큼만</span></span></a></li>
+                <li><a href="04-mcp-structure.html"><span class="num">04</span><span class="title">MCP 서버 구조<span class="sub">Tools · Resources · Prompts</span></span></a></li>
+                <li><a href="05-fastmcp-tools.html"><span class="num">05</span><span class="title">FastMCP Tool 구현<span class="sub">코드 → 스키마 매핑</span></span></a></li>
+                <li><a href="06-schema-inspection.html"><span class="num">06</span><span class="title">스키마 확인·수정<span class="sub">MCP Inspector 사용법</span></span></a></li>
+                <li><a href="07-best-practices.html"><span class="num">07</span><span class="title">좋은 MCP 서버 만들기<span class="sub">팁 · 알고리즘 설계 지침</span></span></a></li>
+                <li><a href="08-railway-example.html"><span class="num">08</span><span class="title">철도 분야 예시<span class="sub">처음부터 끝까지 따라하기</span></span></a></li>
+                <li><a href="09-future-study.html"><span class="num">09</span><span class="title">향후 추가 학습<span class="sub">Streamable HTTP · 타언어 래핑</span></span></a></li>
+            </ol>
+        </nav>
+        <div class="sidebar-footer">
+            <div>v1.0 · 2026-04-24 기준</div>
+            <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
+                <span class="theme-label">다크 모드</span>
+            </button>
+        </div>
+    </aside>
+
+    <main class="content" role="main">
+        <div class="content-inner">
+
+            <nav class="breadcrumb" aria-label="경로">
+                <a href="index.html">홈</a>
+                <span class="sep">›</span>
+                <span>05. FastMCP Tool 구현 & 스키마 매핑</span>
+            </nav>
+
+            <h1 class="page-title">FastMCP Tool 구현 & 스키마 매핑</h1>
+            <p class="page-lead">이 가이드의 심장입니다. <strong>Python 함수의 어떤 부분이 MCP 서버의 어떤 필드로 변환되는가</strong>—이 매핑 규칙만 이해하면 좋은 Tool을 설계할 수 있습니다.</p>
+            <div class="page-meta">
+                <span class="chip">예상 학습 시간 · 30분</span>
+                <span class="chip chip-ghost">이 가이드의 핵심</span>
+            </div>
+
+            <h2>AI가 실제로 보는 것</h2>
+            <p>AI(Claude 등)는 내 Python 코드를 직접 보지 않습니다. MCP 프로토콜이 정해 놓은 <strong>JSON 형식의 정보</strong>만을 받습니다. 그 JSON은 대개 이런 형태입니다.</p>
+            <div class="code-wrap">
+                <div class="code-head"><span class="lang">json</span></div>
+<pre><code>{
+  "name": "hello",
+  "description": "이름을 받아 인사말을 반환합니다.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "name": { "type": "string" }
+    },
+    "required": ["name"]
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "result": { "type": "string" }
+    },
+    "x-fastmcp-wrap-result": true
+  }
+}</code></pre>
+            </div>
+            <p>이 JSON을 <strong>직접 쓰지는 않습니다</strong>. 우리가 쓰는 것은 그냥 Python 함수이고, FastMCP가 함수를 보고 위 JSON을 자동 생성합니다. 단, <strong>"어떤 Python 부분이 어떤 JSON 필드로 가느냐"</strong>를 알고 있어야 좋은 Tool을 짤 수 있습니다.</p>
+
+            <h2>매핑 규칙 한눈에 보기</h2>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Python 쪽</th>
+                            <th>MCP(JSON) 쪽</th>
+                            <th>메모</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>함수 이름 <code>def search_station(...)</code></td>
+                            <td><code>name</code></td>
+                            <td>기본값. <code>@mcp.tool(name="...")</code>로 바꿀 수 있음.</td>
+                        </tr>
+                        <tr>
+                            <td>Docstring 전체</td>
+                            <td><code>description</code></td>
+                            <td><code>@mcp.tool(description="...")</code>로 덮어쓸 수 있음.</td>
+                        </tr>
+                        <tr>
+                            <td>파라미터 타입 힌트 (<code>name: str</code>)</td>
+                            <td><code>inputSchema.properties.name.type</code></td>
+                            <td>Pydantic이 JSON Schema를 생성.</td>
+                        </tr>
+                        <tr>
+                            <td>기본값 없는 파라미터</td>
+                            <td><code>inputSchema.required</code></td>
+                            <td><code>= None</code> 또는 <code>= 0</code> 등 기본값이 있으면 required에서 제외.</td>
+                        </tr>
+                        <tr>
+                            <td>Docstring의 <code>Args:</code> 블록</td>
+                            <td>각 파라미터의 <code>description</code></td>
+                            <td>Google 스타일 docstring 권장.</td>
+                        </tr>
+                        <tr>
+                            <td>반환 타입 힌트 (<code>-&gt; int</code>)</td>
+                            <td><code>outputSchema</code></td>
+                            <td>int/str/float 같은 <strong>원시 타입</strong>은 <code>{"result": ...}</code>로 감싸서 반환.</td>
+                        </tr>
+                        <tr>
+                            <td><code>Annotated[str, Field(description=...)]</code></td>
+                            <td>파라미터 설명을 더 정밀히 지정</td>
+                            <td>docstring의 Args보다 우선 적용.</td>
+                        </tr>
+                        <tr>
+                            <td>Pydantic <code>BaseModel</code> 반환</td>
+                            <td>object 형식의 <code>outputSchema</code></td>
+                            <td>복잡한 응답일수록 이 방식 권장.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="callout tip">
+                <span class="callout-title">원칙</span>
+                <p><strong>타입 힌트</strong>가 형식을 결정하고, <strong>docstring</strong>이 의미를 결정합니다. 두 가지를 성실히 적으면 그 자체로 AI가 이해하기 쉬운 Tool이 됩니다.</p>
+            </div>
+
+            <h2>시각화: 같은 색 = 같은 필드</h2>
+            <div class="mapping-split">
+                <div class="side">
+                    <div class="side-head">Python 함수</div>
+<pre>@mcp.tool
+def <span class="hl hl-1">find_train</span>(
+    <span class="hl hl-2">departure</span>: <span class="hl hl-3">str</span>,
+    <span class="hl hl-2">arrival</span>: <span class="hl hl-3">str</span>,
+    max_transfers: int = 1,
+) -&gt; <span class="hl hl-4">list[dict]</span>:
+    <span class="hl">"""두 역 사이의 열차를 찾습니다.
+
+    Args:
+        departure: 출발역 이름.
+        arrival: 도착역 이름.
+        max_transfers: 허용하는 최대 환승 수.
+    """</span>
+    ...</pre>
+                </div>
+                <div class="side">
+                    <div class="side-head">생성되는 JSON Schema</div>
+<pre>{
+  "name": "<span class="hl hl-1">find_train</span>",
+  "description": <span class="hl">"두 역 사이의 열차를
+     찾습니다..."</span>,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "<span class="hl hl-2">departure</span>": { "type": "<span class="hl hl-3">string</span>",
+        "description": "출발역 이름." },
+      "<span class="hl hl-2">arrival</span>":   { "type": "<span class="hl hl-3">string</span>",
+        "description": "도착역 이름." },
+      "max_transfers": { "type": "integer",
+        "default": 1 }
+    },
+    "required": ["departure","arrival"]
+  },
+  "outputSchema": { "<span class="hl hl-4">array of object</span>" }
+}</pre>
+                </div>
+            </div>
+            <p>같은 색으로 칠해진 부분이 서로 짝입니다. 눈으로 한 번만 따라가 보세요.</p>
+
+            <h2>패턴 1 — 가장 단순한 Tool</h2>
+            <div class="code-wrap">
+                <div class="code-head"><span class="lang">python</span></div>
+<pre><code>from fastmcp import FastMCP
+
+mcp = FastMCP("example")
+
+@mcp.tool
+def km_to_miles(km: float) -&gt; float:
+    """킬로미터를 마일로 변환합니다.
+
+    Args:
+        km: 변환할 거리(킬로미터 단위).
+
+    Returns:
+        같은 거리의 마일 값.
+    """
+    return km * 0.621371</code></pre>
+            </div>
+            <ul>
+                <li><strong>이름</strong>: 함수명 <code>km_to_miles</code>가 그대로 Tool 이름이 됩니다.</li>
+                <li><strong>설명</strong>: docstring 첫 줄이 짧은 설명으로, 전체가 긴 설명으로 쓰입니다.</li>
+                <li><strong>입력 스키마</strong>: <code>km</code>이 <code>number</code> 타입의 필수 필드.</li>
+                <li><strong>출력 스키마</strong>: 원시 타입 <code>float</code>이라 <code>{"result": 숫자}</code> 형태로 감싸집니다.</li>
+            </ul>
+
+            <h2>패턴 2 — Annotated + Field 로 파라미터 설명 강화</h2>
+            <p>docstring의 <code>Args:</code>로도 충분하지만, 제약 조건(최솟값·최댓값 등)을 함께 적고 싶으면 <code>Annotated</code>와 Pydantic의 <code>Field</code>를 씁니다.</p>
+            <div class="code-wrap">
+                <div class="code-head"><span class="lang">python</span></div>
+<pre><code>from typing import Annotated
+from pydantic import Field
+from fastmcp import FastMCP
+
+mcp = FastMCP("example")
+
+@mcp.tool
+def schedule_maintenance(
+    station: Annotated[str, Field(description="점검할 역 이름")],
+    hours: Annotated[int, Field(ge=1, le=24, description="점검 시간(1~24시간)")],
+) -&gt; str:
+    """지정한 역의 점검 일정을 등록합니다."""
+    return f"{station} 점검 {hours}시간 등록"</code></pre>
+            </div>
+            <p><code>ge=1, le=24</code>처럼 쓴 제약은 그대로 JSON Schema의 <code>minimum / maximum</code>으로 변환되어, AI가 "유효하지 않은 값은 아예 보내지 않게" 만듭니다.</p>
+
+            <h2>패턴 3 — Pydantic BaseModel 반환</h2>
+            <p>구조화된 여러 필드를 돌려주려면 Pydantic의 <code>BaseModel</code>이 가장 깔끔합니다. outputSchema가 정확하게 object 형태로 잡혀서 AI가 응답을 파싱하기 쉬워집니다.</p>
+            <div class="code-wrap">
+                <div class="code-head"><span class="lang">python</span></div>
+<pre><code>from pydantic import BaseModel, Field
+from fastmcp import FastMCP
+
+mcp = FastMCP("example")
+
+class Station(BaseModel):
+    name: str = Field(description="역 이름")
+    line: int = Field(description="호선 번호")
+    lat: float
+    lng: float
+
+@mcp.tool
+def get_station(name: str) -&gt; Station:
+    """역 이름으로 역 정보를 조회합니다.
+
+    Args:
+        name: 조회할 역의 이름(예: "서울역").
+    """
+    return Station(name=name, line=1, lat=37.5547, lng=126.9707)</code></pre>
+            </div>
+            <p>이렇게 하면 반환값이 알아서 JSON으로 직렬화되고, outputSchema는 <code>Station</code>의 구조를 정확히 반영합니다. 여러 건을 돌려주고 싶다면 <code>-&gt; list[Station]</code>으로 반환 타입만 바꾸면 됩니다.</p>
+
+            <h2>파라미터 설계 상식</h2>
+            <ul>
+                <li><strong>기본값</strong>이 있으면 그 파라미터는 required에서 빠지고, 기본값도 스키마에 노출됩니다.</li>
+                <li><strong>Optional</strong>(값 또는 <code>None</code>)이 필요하면 <code>name: str | None = None</code> 형태를 씁니다.</li>
+                <li><strong>열거형</strong>(정해진 선택지)은 <code>Literal["A", "B"]</code>를 쓰면 스키마에 <code>enum</code>으로 잡힙니다.</li>
+                <li><strong>너무 많은 파라미터</strong>(5개 이상)는 BaseModel 한 개로 묶어 하나의 파라미터로 받는 게 깔끔합니다.</li>
+            </ul>
+
+            <h2>반환 타입 실전 선택 가이드</h2>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr><th>무엇을 돌려주나</th><th>추천 반환 타입</th><th>결과</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>숫자 하나</td><td><code>-&gt; int</code> / <code>-&gt; float</code></td><td><code>{"result": 42}</code>로 감싸짐</td></tr>
+                        <tr><td>문자열 하나</td><td><code>-&gt; str</code></td><td><code>{"result": "..."}</code>로 감싸짐</td></tr>
+                        <tr><td>성공/실패</td><td><code>-&gt; bool</code></td><td><code>{"result": true}</code></td></tr>
+                        <tr><td>구조화된 하나의 객체</td><td><code>-&gt; Station</code> (BaseModel)</td><td>object로 정확히 매핑</td></tr>
+                        <tr><td>목록</td><td><code>-&gt; list[Station]</code></td><td>array of object</td></tr>
+                        <tr><td>간단한 키-값</td><td><code>-&gt; dict</code></td><td>스키마는 느슨해짐. 가능하면 BaseModel 권장</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="callout warn">
+                <span class="callout-title">이런 것은 피하세요</span>
+                <p>제너레이터(<code>yield</code>)나 스트림 객체를 직접 반환하면 일반 Tool에서는 처리되지 않습니다. 또한 <code>Any</code> 반환은 AI가 스키마를 신뢰하지 못해 품질이 떨어집니다. <strong>반환 타입은 항상 명시하세요.</strong></p>
+            </div>
+
+            <h2>예외와 오류 처리</h2>
+            <p>에러가 났을 때는 값을 억지로 만들어 돌려주기보다 <strong>그냥 예외를 던지세요</strong>. FastMCP가 알아서 MCP 프로토콜의 에러 응답으로 변환해 줍니다.</p>
+            <div class="code-wrap">
+                <div class="code-head"><span class="lang">python</span></div>
+<pre><code>@mcp.tool
+def get_station(name: str) -&gt; Station:
+    """역 이름으로 역 정보를 조회합니다."""
+    if name not in STATIONS:
+        raise ValueError(f"'{name}' 역을 찾을 수 없습니다.")
+    return STATIONS[name]</code></pre>
+            </div>
+            <p>예외 메시지는 그대로 AI가 보기 때문에, <strong>사람이 읽을 수 있는 한국어(또는 영어) 문장</strong>으로 써 주세요. "VALIDATION_ERR_NPE_42" 같은 코드는 AI에게 도움이 되지 않습니다.</p>
+
+            <h2>실습: 여러 언어로 인사하는 Tool</h2>
+            <div class="callout lab">
+                <span class="callout-title">실습 — 10분</span>
+                <p>앞 장에서 만든 <code>hello</code> Tool을 "여러 언어로 인사하는" 버전으로 확장해 봅니다. <code>Literal</code>로 선택지를 제한하고, BaseModel로 결과를 구조화합니다.</p>
+            </div>
+            <div class="code-wrap">
+                <div class="code-head"><span class="lang">python · hello_multi.py</span></div>
+<pre><code>from typing import Literal
+from pydantic import BaseModel
+from fastmcp import FastMCP
+
+mcp = FastMCP("hello-multi")
+
+
+class Greeting(BaseModel):
+    language: str
+    text: str
+
+
+GREETINGS: dict[str, str] = {
+    "ko": "안녕하세요, {name}님!",
+    "en": "Hello, {name}!",
+    "ja": "こんにちは、{name}さん!",
+}
+
+
+@mcp.tool
+def greet(
+    name: str,
+    language: Literal["ko", "en", "ja"] = "ko",
+) -&gt; Greeting:
+    """지정한 언어로 인사말을 만들어 돌려줍니다.
+
+    Args:
+        name: 인사할 대상의 이름.
+        language: 인사말의 언어 코드. ko, en, ja 중 하나.
+    """
+    template = GREETINGS[language]
+    return Greeting(language=language, text=template.format(name=name))
+
+
+if __name__ == "__main__":
+    mcp.run()</code></pre>
+            </div>
+            <p>실행한 뒤 다음 장에서 배울 <strong>MCP Inspector</strong>로 확인해 보면, <code>language</code> 필드가 <code>enum: ["ko", "en", "ja"]</code>로 잡혀 있고 <code>Greeting</code> 객체 형식의 outputSchema가 자동 생성된 것을 볼 수 있습니다.</p>
+
+            <div class="callout tip">
+                <span class="callout-title">이 장의 핵심 한 줄</span>
+                <p><strong>"타입 힌트 + docstring + (필요하면) BaseModel"</strong> — 이 세 가지만 성실히 적으면, 스키마는 FastMCP가 알아서 아주 정확하게 만들어 줍니다.</p>
+            </div>
+
+            <nav class="pager" aria-label="페이지 이동">
+                <a class="prev" href="04-mcp-structure.html">
+                    <span class="dir">이전</span>
+                    <span class="label">← 04. MCP 서버 구조</span>
+                </a>
+                <a class="next" href="06-schema-inspection.html">
+                    <span class="dir">다음</span>
+                    <span class="label">06. 스키마 확인·수정 →</span>
+                </a>
+            </nav>
+
+        </div>
+    </main>
+</div>
+</body>
+</html>

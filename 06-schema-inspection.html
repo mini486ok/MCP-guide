@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#4338ca">
+    <meta name="description" content="MCP Inspector로 내 MCP 서버의 description·inputSchema·outputSchema를 눈으로 확인하고 기대와 다를 때 고치는 법을 배웁니다.">
+    <title>06. 스키마 확인·수정 · Python MCP 서버 가이드</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <script defer src="assets/js/main.js"></script>
+</head>
+<body>
+<div class="progress-bar" aria-hidden="true"></div>
+
+<header class="topbar" role="banner">
+    <button class="icon-btn" type="button" data-sidebar-open aria-label="메뉴 열기">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+    <span class="brand">06. 스키마 확인</span>
+    <button class="icon-btn" type="button" data-theme-toggle aria-label="다크 모드 전환" aria-pressed="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
+    </button>
+</header>
+
+<div class="sidebar-backdrop" data-sidebar-close aria-hidden="true"></div>
+
+<div class="layout">
+    <aside class="sidebar" id="sidebar" aria-label="가이드 목차">
+        <div class="sidebar-header">
+            <h2 class="sidebar-title">Python MCP 서버<br>가이드라인</h2>
+            <p class="sidebar-sub">초보자를 위한 한국어 단계별 가이드</p>
+        </div>
+        <nav aria-label="목차">
+            <ol>
+                <li><a href="index.html"><span class="num">00</span><span class="title">시작하기<span class="sub">가이드 소개 · 학습 경로</span></span></a></li>
+                <li><a href="01-mcp-overview.html"><span class="num">01</span><span class="title">MCP 개요와 필요성<span class="sub">무엇이며 왜 쓰는가</span></span></a></li>
+                <li><a href="02-dev-setup.html"><span class="num">02</span><span class="title">개발 환경 설정<span class="sub">Python · 에디터 · 패키지</span></span></a></li>
+                <li><a href="03-python-basics.html"><span class="num">03</span><span class="title">Python 기초 문법<span class="sub">꼭 필요한 만큼만</span></span></a></li>
+                <li><a href="04-mcp-structure.html"><span class="num">04</span><span class="title">MCP 서버 구조<span class="sub">Tools · Resources · Prompts</span></span></a></li>
+                <li><a href="05-fastmcp-tools.html"><span class="num">05</span><span class="title">FastMCP Tool 구현<span class="sub">코드 → 스키마 매핑</span></span></a></li>
+                <li><a href="06-schema-inspection.html"><span class="num">06</span><span class="title">스키마 확인·수정<span class="sub">MCP Inspector 사용법</span></span></a></li>
+                <li><a href="07-best-practices.html"><span class="num">07</span><span class="title">좋은 MCP 서버 만들기<span class="sub">팁 · 알고리즘 설계 지침</span></span></a></li>
+                <li><a href="08-railway-example.html"><span class="num">08</span><span class="title">철도 분야 예시<span class="sub">처음부터 끝까지 따라하기</span></span></a></li>
+                <li><a href="09-future-study.html"><span class="num">09</span><span class="title">향후 추가 학습<span class="sub">Streamable HTTP · 타언어 래핑</span></span></a></li>
+            </ol>
+        </nav>
+        <div class="sidebar-footer">
+            <div>v1.0 · 2026-04-24 기준</div>
+            <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
+                <span class="theme-label">다크 모드</span>
+            </button>
+        </div>
+    </aside>
+
+    <main class="content" role="main">
+        <div class="content-inner">
+
+            <nav class="breadcrumb" aria-label="경로">
+                <a href="index.html">홈</a>
+                <span class="sep">›</span>
+                <span>06. 스키마 확인·수정</span>
+            </nav>
+
+            <h1 class="page-title">스키마 확인·수정</h1>
+            <p class="page-lead">내가 만든 MCP 서버가 AI에게 실제로 어떻게 보이는지, AI에게 전달되는 description·inputSchema·outputSchema를 <strong>눈으로 직접</strong> 확인하고 고치는 방법을 배웁니다.</p>
+            <div class="page-meta">
+                <span class="chip">예상 학습 시간 · 15분</span>
+                <span class="chip chip-ghost">Node.js 필요</span>
+            </div>
+
+            <h2>왜 검증이 필요할까?</h2>
+            <p>코드만 봐서는 "AI가 이 Tool을 어떻게 이해할지" 감을 잡기 어렵습니다. 실제로 눈으로 보면 많은 것이 달라집니다.</p>
+            <ul>
+                <li>docstring을 빼먹어서 <code>description</code>이 비어 있을 수 있습니다.</li>
+                <li>타입을 <code>int</code>로 썼는데 의도는 <code>float</code>이었을 수 있습니다.</li>
+                <li>반환 타입을 지정하지 않아 outputSchema가 생성되지 않을 수 있습니다.</li>
+            </ul>
+            <p>이런 문제를 "AI가 이상하게 동작해서 알게" 되는 대신, <strong>서버를 연결하기 전에</strong> 우리가 직접 볼 수 있게 해 주는 도구가 <strong>MCP Inspector</strong>입니다.</p>
+
+            <h2>MCP Inspector란?</h2>
+            <p>Anthropic의 MCP 팀이 공식 제공하는 <strong>개발자용 웹 UI</strong>입니다. 브라우저에서 우리 서버에 연결해:</p>
+            <ul>
+                <li>노출된 Tool/Resource/Prompt 목록을 확인하고</li>
+                <li>각 Tool의 설명·입력 스키마·출력 스키마를 JSON으로 살펴보고</li>
+                <li>실제로 Tool을 호출해 응답을 바로 확인</li>
+            </ul>
+            <p>할 수 있습니다. 한 마디로 <strong>"MCP 서버용 Postman"</strong>이라고 생각하면 됩니다.</p>
+
+            <h2>설치 · 실행</h2>
+            <p>MCP Inspector는 Node.js 기반입니다. 먼저 Node.js가 필요합니다.</p>
+
+            <h3>Step 1. Node.js 설치</h3>
+            <ol>
+                <li><a href="https://nodejs.org/" target="_blank" rel="noopener">nodejs.org</a>에서 LTS 버전 다운로드 → 설치(기본 설정 그대로).</li>
+                <li>설치 확인:</li>
+            </ol>
+            <div class="code-wrap">
+                <div class="code-head"><span class="lang">bash</span></div>
+<pre><code>node --version
+npx --version</code></pre>
+            </div>
+
+            <h3>Step 2. Inspector로 서버 열기</h3>
+            <p>두 가지 방법이 있습니다. 초보자에게는 <strong>방법 A가 훨씬 권장</strong>입니다.</p>
+
+            <h4>방법 A — FastMCP의 <code>dev</code> 명령 (권장)</h4>
+            <p>FastMCP 자체가 Inspector를 함께 띄워 주는 편리한 커맨드를 제공합니다.</p>
+            <div class="code-wrap">
+                <div class="code-head"><span class="lang">bash</span></div>
+<pre><code>fastmcp dev hello.py</code></pre>
+            </div>
+            <p>이 한 줄로:</p>
+            <ol>
+                <li>Inspector를 자동으로 다운로드·실행합니다.</li>
+                <li>내 서버(<code>hello.py</code>)를 그 Inspector에 연결합니다.</li>
+                <li>브라우저가 자동으로 열립니다(열리지 않으면 터미널에 출력된 URL을 직접 여세요. 보통 <code>http://localhost:6274</code>).</li>
+            </ol>
+
+            <h4>방법 B — Inspector를 직접 실행</h4>
+            <div class="code-wrap">
+                <div class="code-head"><span class="lang">bash</span></div>
+<pre><code>npx @modelcontextprotocol/inspector python hello.py</code></pre>
+            </div>
+            <p>이때도 브라우저가 뜨고, 왼쪽에서 <strong>"Connect"</strong> 버튼을 누르면 우리 서버와 연결됩니다.</p>
+
+            <h2>화면 사용법</h2>
+            <p>Inspector는 크게 좌측 네비게이션과 우측 상세 뷰로 나뉩니다. 한 번만 익혀두면 매일 쓰게 됩니다.</p>
+            <div class="diagram">
+                <svg viewBox="0 0 720 280" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Inspector 화면 구성">
+                    <g font-family="Pretendard, sans-serif" font-size="12">
+                        <rect x="20" y="30" width="200" height="230" rx="10" fill="#f8fafc" stroke="#cbd5e1"/>
+                        <text x="120" y="55" text-anchor="middle" font-weight="700" fill="#1f2937">좌측 네비게이션</text>
+                        <rect x="40" y="75" width="160" height="28" rx="6" fill="#eef2ff" stroke="#4338ca"/>
+                        <text x="120" y="94" text-anchor="middle" fill="#4338ca">Tools</text>
+                        <rect x="40" y="115" width="160" height="24" rx="6" fill="#fff" stroke="#cbd5e1"/>
+                        <text x="120" y="131" text-anchor="middle" fill="#64748b">Resources</text>
+                        <rect x="40" y="151" width="160" height="24" rx="6" fill="#fff" stroke="#cbd5e1"/>
+                        <text x="120" y="167" text-anchor="middle" fill="#64748b">Prompts</text>
+
+                        <text x="40" y="202" fill="#64748b" font-size="11">선택된 Tool 목록:</text>
+                        <text x="40" y="220" fill="#1f2937" font-size="11">• hello</text>
+                        <text x="40" y="238" fill="#1f2937" font-size="11">• greet</text>
+
+                        <rect x="240" y="30" width="460" height="230" rx="10" fill="#fff" stroke="#cbd5e1"/>
+                        <text x="470" y="55" text-anchor="middle" font-weight="700" fill="#1f2937">우측 상세 뷰</text>
+
+                        <rect x="260" y="75" width="200" height="170" rx="8" fill="#f0fdf4" stroke="#16a34a"/>
+                        <text x="360" y="98" text-anchor="middle" font-weight="700" fill="#1f2937">스키마 뷰</text>
+                        <text x="360" y="118" text-anchor="middle" font-size="11" fill="#475569">description</text>
+                        <text x="360" y="136" text-anchor="middle" font-size="11" fill="#475569">inputSchema (JSON)</text>
+                        <text x="360" y="154" text-anchor="middle" font-size="11" fill="#475569">outputSchema (JSON)</text>
+                        <text x="360" y="186" text-anchor="middle" font-size="11" fill="#64748b">AI가 보는 바로 그 정보</text>
+
+                        <rect x="480" y="75" width="200" height="170" rx="8" fill="#fff7ed" stroke="#f97316"/>
+                        <text x="580" y="98" text-anchor="middle" font-weight="700" fill="#1f2937">호출 테스트</text>
+                        <text x="580" y="118" text-anchor="middle" font-size="11" fill="#475569">파라미터 입력 폼</text>
+                        <text x="580" y="136" text-anchor="middle" font-size="11" fill="#475569">[ Run ] 버튼</text>
+                        <text x="580" y="170" text-anchor="middle" font-size="11" fill="#475569">응답 결과 (JSON)</text>
+                    </g>
+                </svg>
+                <div class="caption">좌측 Tools 탭에서 Tool을 고르면, 오른쪽에 스키마와 테스트 영역이 나타납니다.</div>
+            </div>
+
+            <h3>Step 1. Tools 탭 열기</h3>
+            <p>좌측 네비게이션에서 "Tools"를 클릭한 뒤, 중간 목록에서 보고 싶은 Tool을 선택합니다. 04장에서 만든 <code>hello</code>를 고른다고 가정해 봅시다.</p>
+
+            <h3>Step 2. 스키마 확인</h3>
+            <p>우측에 다음 세 가지가 JSON으로 보입니다.</p>
+            <ul>
+                <li><strong>Description</strong> — 여러분의 docstring이 그대로 들어가 있는지 확인.</li>
+                <li><strong>Input Schema</strong> — 파라미터 이름·타입·필수 여부·설명.</li>
+                <li><strong>Output Schema</strong> — 반환 타입의 구조(없으면 이 섹션이 통째로 빠져 있음).</li>
+            </ul>
+
+            <h3>Step 3. 호출해 보기</h3>
+            <p>같은 탭 아래쪽에 Tool을 직접 실행해 볼 수 있는 폼이 있습니다. <code>name</code>에 "미나"를 넣고 "Run"을 누르면, 실제 응답이 JSON으로 표시됩니다.</p>
+
+            <h2>스키마가 기대와 다를 때: 원인과 처방</h2>
+            <p>대부분의 문제는 아래 표 한 장으로 해결됩니다.</p>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr><th>증상</th><th>원인</th><th>고치는 법</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>description</code>이 비어 있음</td>
+                            <td>함수에 docstring이 없음</td>
+                            <td>함수 바로 아래에 <code>"""..."""</code> 추가</td>
+                        </tr>
+                        <tr>
+                            <td>파라미터 <code>description</code>이 비어 있음</td>
+                            <td>docstring에 <code>Args:</code> 블록이 없음</td>
+                            <td>Google 스타일의 <code>Args:</code> 추가 또는 <code>Annotated[..., Field(description=...)]</code></td>
+                        </tr>
+                        <tr>
+                            <td>파라미터 <code>type</code>이 <code>string</code>인데 숫자를 기대</td>
+                            <td>타입 힌트가 <code>str</code> 또는 미지정</td>
+                            <td><code>age: int</code>처럼 정확히 지정</td>
+                        </tr>
+                        <tr>
+                            <td>모든 파라미터가 required로 잡힘</td>
+                            <td>기본값이 없어서</td>
+                            <td>선택 인자에 <code>= None</code> 또는 구체적 기본값 부여</td>
+                        </tr>
+                        <tr>
+                            <td><code>outputSchema</code>가 없음</td>
+                            <td>반환 타입 힌트(<code>-&gt; ...</code>)가 없음</td>
+                            <td>반환 타입을 명시. 복잡하면 <code>BaseModel</code> 도입</td>
+                        </tr>
+                        <tr>
+                            <td>반환 스키마가 "그냥 object"처럼 느슨함</td>
+                            <td><code>dict</code>나 <code>Any</code>를 반환</td>
+                            <td>Pydantic <code>BaseModel</code> 서브클래스로 교체</td>
+                        </tr>
+                        <tr>
+                            <td>호출 시 <code>Validation error</code></td>
+                            <td>입력이 스키마를 어김</td>
+                            <td>Inspector 폼의 에러 메시지를 읽어 값 수정(이게 Inspector의 진짜 가치)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h2>바뀌면 Inspector를 다시 열어야 하나?</h2>
+            <p><code>fastmcp dev</code>로 실행했다면, 코드를 저장하자마자 자동으로 서버가 재시작됩니다. Inspector 화면에서 해당 Tool을 다시 클릭하기만 하면 최신 스키마가 보입니다. 자동 재시작이 안 된다면 터미널을 <kbd>Ctrl</kbd> + <kbd>C</kbd>로 끝낸 뒤 다시 실행하세요.</p>
+
+            <h2>CI/회귀 검증: CLI 모드</h2>
+            <p>Inspector는 브라우저 UI뿐 아니라 명령행(CLI)에서도 동작합니다. 팀에서 Tool 스키마가 바뀌지 않는지 지속적으로 확인하고 싶을 때 유용합니다.</p>
+            <div class="code-wrap">
+                <div class="code-head"><span class="lang">bash</span></div>
+<pre><code># 모든 Tool의 목록과 스키마를 JSON으로 출력
+npx @modelcontextprotocol/inspector --cli python hello.py --method tools/list
+
+# 특정 Tool을 주어진 인자로 호출해 결과를 출력
+npx @modelcontextprotocol/inspector --cli python hello.py \
+    --method tools/call --tool-name hello --tool-arg name=미나</code></pre>
+            </div>
+            <p>이 출력을 <code>jq</code>로 확인하거나 GitHub Actions에서 스냅샷 비교 테스트에 활용할 수 있습니다. 개인 개발 단계에서는 여기까지 하지 않아도 됩니다.</p>
+
+            <div class="callout tip">
+                <span class="callout-title">개발 루프 제안</span>
+                <p>실무 개발은 다음 루프를 반복합니다. <strong>① 함수 수정 → ② 저장 → ③ Inspector에서 새로고침 → ④ 스키마/응답 확인 → ⑤ 수정.</strong> 이 루프가 몸에 배면 MCP 서버를 만드는 속도가 크게 빨라집니다.</p>
+            </div>
+
+            <nav class="pager" aria-label="페이지 이동">
+                <a class="prev" href="05-fastmcp-tools.html">
+                    <span class="dir">이전</span>
+                    <span class="label">← 05. FastMCP Tool 구현</span>
+                </a>
+                <a class="next" href="07-best-practices.html">
+                    <span class="dir">다음</span>
+                    <span class="label">07. 좋은 MCP 서버 만들기 →</span>
+                </a>
+            </nav>
+
+        </div>
+    </main>
+</div>
+</body>
+</html>

@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#4338ca">
+    <meta name="description" content="철도 정보 MCP 서버를 처음부터 끝까지 함께 만들어 봅니다. 4개의 Tool과 실제 소스코드, Claude Desktop 연결까지.">
+    <title>08. 철도 분야 예시 · Python MCP 서버 가이드</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <script defer src="assets/js/main.js"></script>
+</head>
+<body>
+<div class="progress-bar" aria-hidden="true"></div>
+
+<header class="topbar" role="banner">
+    <button class="icon-btn" type="button" data-sidebar-open aria-label="메뉴 열기">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+    <span class="brand">08. 철도 예시</span>
+    <button class="icon-btn" type="button" data-theme-toggle aria-label="다크 모드 전환" aria-pressed="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
+    </button>
+</header>
+
+<div class="sidebar-backdrop" data-sidebar-close aria-hidden="true"></div>
+
+<div class="layout">
+    <aside class="sidebar" id="sidebar" aria-label="가이드 목차">
+        <div class="sidebar-header">
+            <h2 class="sidebar-title">Python MCP 서버<br>가이드라인</h2>
+            <p class="sidebar-sub">초보자를 위한 한국어 단계별 가이드</p>
+        </div>
+        <nav aria-label="목차">
+            <ol>
+                <li><a href="index.html"><span class="num">00</span><span class="title">시작하기<span class="sub">가이드 소개 · 학습 경로</span></span></a></li>
+                <li><a href="01-mcp-overview.html"><span class="num">01</span><span class="title">MCP 개요와 필요성<span class="sub">무엇이며 왜 쓰는가</span></span></a></li>
+                <li><a href="02-dev-setup.html"><span class="num">02</span><span class="title">개발 환경 설정<span class="sub">Python · 에디터 · 패키지</span></span></a></li>
+                <li><a href="03-python-basics.html"><span class="num">03</span><span class="title">Python 기초 문법<span class="sub">꼭 필요한 만큼만</span></span></a></li>
+                <li><a href="04-mcp-structure.html"><span class="num">04</span><span class="title">MCP 서버 구조<span class="sub">Tools · Resources · Prompts</span></span></a></li>
+                <li><a href="05-fastmcp-tools.html"><span class="num">05</span><span class="title">FastMCP Tool 구현<span class="sub">코드 → 스키마 매핑</span></span></a></li>
+                <li><a href="06-schema-inspection.html"><span class="num">06</span><span class="title">스키마 확인·수정<span class="sub">MCP Inspector 사용법</span></span></a></li>
+                <li><a href="07-best-practices.html"><span class="num">07</span><span class="title">좋은 MCP 서버 만들기<span class="sub">팁 · 알고리즘 설계 지침</span></span></a></li>
+                <li><a href="08-railway-example.html"><span class="num">08</span><span class="title">철도 분야 예시<span class="sub">처음부터 끝까지 따라하기</span></span></a></li>
+                <li><a href="09-future-study.html"><span class="num">09</span><span class="title">향후 추가 학습<span class="sub">Streamable HTTP · 타언어 래핑</span></span></a></li>
+            </ol>
+        </nav>
+        <div class="sidebar-footer">
+            <div>v1.0 · 2026-04-24 기준</div>
+            <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
+                <span class="theme-label">다크 모드</span>
+            </button>
+        </div>
+    </aside>
+
+    <main class="content" role="main">
+        <div class="content-inner">
+
+            <nav class="breadcrumb" aria-label="경로">
+                <a href="index.html">홈</a>
+                <span class="sep">›</span>
+                <span>08. 철도 분야 예시</span>
+            </nav>
+
+            <h1 class="page-title">철도 정보 MCP 서버 만들기</h1>
+            <p class="page-lead">이 장에서는 지금까지 배운 내용을 모두 합쳐 <strong>"철도 정보 MCP 서버"</strong>를 처음부터 끝까지 만들어 봅니다. 4개 Tool과 2개 데이터 모델이 포함된 작지만 완결된 예제입니다.</p>
+            <div class="page-meta">
+                <span class="chip">예상 학습 시간 · 30~40분</span>
+                <span class="chip chip-ghost">실습</span>
+                <span class="chip chip-ghost">05·06장 선행</span>
+            </div>
+
+            <h2>만들 것</h2>
+            <p>가상의 사내 철도 정보 조회 서버입니다. 실제 API 연결 없이 <strong>하드코딩된 샘플 데이터</strong>(서울 지하철 1·2호선 일부)만으로 동작합니다.</p>
+            <div class="cards">
+                <article class="card">
+                    <span class="card-badge">TOOL 1</span>
+                    <h4>list_stations</h4>
+                    <p>관리 중인 모든 역을 목록으로 반환. 호선 번호로 필터링 가능.</p>
+                </article>
+                <article class="card">
+                    <span class="card-badge">TOOL 2</span>
+                    <h4>get_station_info</h4>
+                    <p>역 이름을 받아 호선·환승 여부·좌표 등 상세 정보 반환.</p>
+                </article>
+                <article class="card">
+                    <span class="card-badge">TOOL 3</span>
+                    <h4>distance_between</h4>
+                    <p>두 역 이름을 받아 하버사인 공식으로 직선 거리(km) 계산.</p>
+                </article>
+                <article class="card">
+                    <span class="card-badge">TOOL 4</span>
+                    <h4>find_trains</h4>
+                    <p>출발·도착역에 맞는 가상의 열차 시간표를 조회. 정렬 기준 선택 가능.</p>
+                </article>
+            </div>
+            <div class="callout info">
+                <span class="callout-title">전체 소스</span>
+                <p>한 번에 전체 코드를 보고 싶다면 <a href="examples/railway_mcp_server.py" download>examples/railway_mcp_server.py</a>를 다운로드하세요. 이 장은 같은 파일을 조각내어 단계별로 해설합니다.</p>
+            </div>
+
+            <h2>Step 1. 프로젝트 준비</h2>
+            <p>02장에서 만든 프로젝트 폴더(<code>C:\mcp-first</code>)에 파일을 하나 추가합니다.</p>
+            <div class="code-wrap">
+                <div class="code-head"><span class="lang">bash</span></div>
+<pre><code>cd C:\mcp-first
+.venv\Scripts\activate
+type nul &gt; railway_server.py
+code .</code></pre>
+            </div>
+            <p>VS Code에서 <code>railway_server.py</code>를 열고, 아래 코드 조각들을 순서대로 붙여 나가면 됩니다.</p>
+
+            <h2>Step 2. 데이터 모델 정의</h2>
+            <p>응답으로 돌려줄 데이터 구조를 Pydantic <code>BaseModel</code>로 먼저 정의합니다. 이렇게 하면 outputSchema가 정확하게 잡히고, 오타·잘못된 타입이 자동으로 걸러집니다.</p>
+            <div class="code-wrap">
+                <div class="code-head"><span class="lang">python</span></div>
+<pre><code>from __future__ import annotations
+
+from math import asin, cos, radians, sin, sqrt
+from typing import Literal
+
+from pydantic import BaseModel, Field
+
+from fastmcp import FastMCP
+
+
+class Station(BaseModel):
+    """역 정보."""
+    name: str = Field(description="역 이름")
+    line: int = Field(description="호선 번호")
+    is_transfer: bool = Field(description="환승역 여부")
+    lat: float = Field(description="위도")
+    lng: float = Field(description="경도")
+
+
+class Train(BaseModel):
+    """열차 운행 정보."""
+    train_no: str = Field(description="열차 번호")
+    departure: str = Field(description="출발역 이름")
+    arrival: str = Field(description="도착역 이름")
+    depart_time: str = Field(description="출발 시각(HH:MM)")
+    arrive_time: str = Field(description="도착 시각(HH:MM)")
+    duration_min: int = Field(description="총 소요 시간(분)")
+
+
+class DistanceResult(BaseModel):
+    """두 역 사이 거리 계산 결과."""
+    departure: str
+    arrival: str
+    distance_km: float = Field(description="직선 거리(킬로미터)")</code></pre>
+            </div>
+            <p>각 필드의 <code>description</code>이 그대로 AI가 보는 스키마에 들어갑니다. 필드 의미를 한 줄씩 써 두는 게 미래의 나를 돕습니다.</p>
+
+            <h2>Step 3. 샘플 데이터</h2>
+            <p>실제 DB 대신 딕셔너리와 리스트로 10개 역·8편 열차 데이터를 하드코딩합니다. 나중에 이 부분만 DB 조회 코드로 바꾸면 실서비스가 됩니다.</p>
+            <div class="code-wrap">
+                <div class="code-head"><span class="lang">python</span></div>
+<pre><code>STATIONS: dict[str, Station] = {
+    "서울역":  Station(name="서울역",  line=1, is_transfer=True,  lat=37.5547, lng=126.9707),
+    "시청":    Station(name="시청",    line=1, is_transfer=True,  lat=37.5640, lng=126.9770),
+    "종각":    Station(name="종각",    line=1, is_transfer=False, lat=37.5703, lng=126.9829),
+    "종로3가": Station(name="종로3가", line=1, is_transfer=True,  lat=37.5714, lng=126.9919),
+    "동대문":  Station(name="동대문",  line=1, is_transfer=True,  lat=37.5713, lng=127.0094),
+    "강남":    Station(name="강남",    line=2, is_transfer=False, lat=37.4980, lng=127.0276),
+    "역삼":    Station(name="역삼",    line=2, is_transfer=False, lat=37.5006, lng=127.0366),
+    "잠실":    Station(name="잠실",    line=2, is_transfer=True,  lat=37.5133, lng=127.1000),
+    "홍대입구":Station(name="홍대입구",line=2, is_transfer=True,  lat=37.5572, lng=126.9240),
+    "신촌":    Station(name="신촌",    line=2, is_transfer=False, lat=37.5550, lng=126.9368),
+}
+
+TRAINS: list[Train] = [
+    Train(train_no="KTX-001", departure="서울역", arrival="강남",   depart_time="08:00", arrive_time="08:35", duration_min=35),
+    Train(train_no="KTX-003", departure="서울역", arrival="강남",   depart_time="09:00", arrive_time="09:36", duration_min=36),
+    Train(train_no="ITX-110", departure="서울역", arrival="잠실",   depart_time="08:15", arrive_time="09:10", duration_min=55),
+    # ... 중략: 전체는 examples/railway_mcp_server.py 참조
+]</code></pre>
+            </div>
+
+            <h2>Step 4. 거리 계산 "코어 함수"</h2>
+            <p>07장에서 배운 대로, <strong>재사용 가능한 순수 함수</strong>로 먼저 분리합니다. 이 함수는 MCP와 무관하게 독립적으로 테스트 가능합니다.</p>
+            <div class="code-wrap">
+                <div class="code-head"><span class="lang">python</span></div>
+<pre><code>def _haversine_km(lat1: float, lng1: float, lat2: float, lng2: float) -&gt; float:
+    """위·경도를 받아 지표 위 직선 거리(km)를 돌려주는 순수 함수."""
+    earth_radius_km = 6371.0
+    dlat = radians(lat2 - lat1)
+    dlng = radians(lng2 - lng1)
+    a = sin(dlat / 2) ** 2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlng / 2) ** 2
+    return 2 * earth_radius_km * asin(sqrt(a))</code></pre>
+            </div>
+            <p>함수 이름 앞의 <code>_</code>는 "외부에 공개하지 않는 내부 함수"라는 관례입니다. MCP Tool은 <code>_</code>로 시작하지 않는 공개 함수들로 구성합니다.</p>
+
+            <h2>Step 5. 서버 인스턴스 + 4개의 Tool</h2>
+
+            <h3>Tool 1: list_stations</h3>
+            <div class="code-wrap">
+                <div class="code-head"><span class="lang">python</span></div>
+<pre><code>mcp = FastMCP("railway-info")
+
+
+@mcp.tool
+def list_stations(line: int | None = None) -&gt; list[Station]:
+    """등록된 역 목록을 반환합니다.
+
+    Args:
+        line: 지정하면 해당 호선의 역만 필터링. 생략하면 전체 반환.
+
+    Returns:
+        Station 객체의 리스트.
+    """
+    stations = list(STATIONS.values())
+    if line is not None:
+        stations = [s for s in stations if s.line == line]
+    return stations</code></pre>
+            </div>
+            <p><code>line</code> 인자에 기본값 <code>None</code>이 있으므로 스키마에서 <strong>선택 인자</strong>가 됩니다. 호출 예: <code>list_stations()</code> 또는 <code>list_stations(line=2)</code>.</p>
+
+            <h3>Tool 2: get_station_info</h3>
+            <div class="code-wrap">
+                <div class="code-head"><span class="lang">python</span></div>
+<pre><code>@mcp.tool
+def get_station_info(name: str) -&gt; Station:
+    """역 이름으로 역 상세 정보를 조회합니다.
+
+    Args:
+        name: 조회할 역의 한글 이름(예: "강남").
+
+    Returns:
+        일치하는 Station 객체.
+
+    Raises:
+        ValueError: 등록되지 않은 역 이름을 전달한 경우.
+    """
+    if name not in STATIONS:
+        raise ValueError(f"'{name}' 역은 이 서비스가 관리하는 역 목록에 없습니다.")
+    return STATIONS[name]</code></pre>
+            </div>
+            <p>07장의 <strong>팁 4</strong>에 따라 오류 메시지를 한국어 문장으로 썼습니다. AI가 그 메시지를 그대로 받아 "대신 어떤 역을 조회할까요?"처럼 자연스럽게 이어갈 수 있습니다.</p>
+
+            <h3>Tool 3: distance_between</h3>
+            <div class="code-wrap">
+                <div class="code-head"><span class="lang">python</span></div>
+<pre><code>@mcp.tool
+def distance_between(station_a: str, station_b: str) -&gt; DistanceResult:
+    """두 역 사이의 직선 거리(km)를 계산합니다.
+
+    Args:
+        station_a: 첫 번째 역 이름.
+        station_b: 두 번째 역 이름.
+
+    Returns:
+        거리 정보(DistanceResult).
+
+    Raises:
+        ValueError: 둘 중 하나라도 등록되지 않은 역인 경우.
+    """
+    for name in (station_a, station_b):
+        if name not in STATIONS:
+            raise ValueError(f"'{name}' 역은 관리되지 않는 역입니다.")
+    a = STATIONS[station_a]
+    b = STATIONS[station_b]
+    km = _haversine_km(a.lat, a.lng, b.lat, b.lng)
+    return DistanceResult(
+        departure=station_a,
+        arrival=station_b,
+        distance_km=round(km, 3),
+    )</code></pre>
+            </div>
+
+            <h3>Tool 4: find_trains</h3>
+            <div class="code-wrap">
+                <div class="code-head"><span class="lang">python</span></div>
+<pre><code>@mcp.tool
+def find_trains(
+    departure: str,
+    arrival: str,
+    sort_by: Literal["depart_time", "duration_min"] = "depart_time",
+) -&gt; list[Train]:
+    """출발역과 도착역이 일치하는 열차 시간표를 조회합니다.
+
+    Args:
+        departure: 출발역 이름.
+        arrival: 도착역 이름.
+        sort_by: 결과 정렬 기준. 'depart_time'(기본) 또는 'duration_min'.
+
+    Returns:
+        조건에 맞는 Train 객체 리스트. 일치 항목이 없으면 빈 리스트.
+    """
+    results = [t for t in TRAINS if t.departure == departure and t.arrival == arrival]
+    results.sort(key=lambda t: getattr(t, sort_by))
+    return results</code></pre>
+            </div>
+            <p><code>Literal["depart_time", "duration_min"]</code>로 쓴 덕분에 AI는 저 두 값 외에는 시도하지 않습니다. <strong>잘못된 정렬 기준이 들어올 가능성을 원천 차단</strong>했습니다.</p>
+
+            <h2>Step 6. 실행</h2>
+            <p>파일 맨 아래에 엔트리 포인트를 추가합니다.</p>
+            <div class="code-wrap">
+                <div class="code-head"><span class="lang">python</span></div>
+<pre><code>if __name__ == "__main__":
+    mcp.run()</code></pre>
+            </div>
+            <p>명령 프롬프트에서 실행:</p>
+            <div class="code-wrap">
+                <div class="code-head"><span class="lang">bash</span></div>
+<pre><code>python railway_server.py</code></pre>
+            </div>
+            <p>오류가 없다면 입력을 기다리는 상태가 됩니다.</p>
+
+            <h2>Step 7. MCP Inspector로 점검</h2>
+            <p>06장에서 배운 대로 Inspector로 각 Tool의 스키마와 응답을 확인합니다.</p>
+            <div class="code-wrap">
+                <div class="code-head"><span class="lang">bash</span></div>
+<pre><code>fastmcp dev railway_server.py</code></pre>
+            </div>
+            <p>브라우저에서 Inspector가 열리면 <strong>Tools 탭</strong>에서 4개 Tool이 보입니다. 아래 세 가지 시나리오를 꼭 돌려 보세요.</p>
+            <div class="callout lab">
+                <span class="callout-title">실습 시나리오 3가지</span>
+                <ol>
+                    <li><strong>정상 호출:</strong> <code>list_stations</code>를 아무 인자 없이 호출. 10개 역이 나오는지 확인.</li>
+                    <li><strong>오류 확인:</strong> <code>get_station_info</code>에 "도쿄역"을 넣어 호출. ValueError 메시지가 그대로 보이는지 확인(= AI도 저 메시지를 읽는다는 뜻).</li>
+                    <li><strong>열거형:</strong> <code>find_trains</code>의 <code>sort_by</code>에 "random"을 넣어 Run. Inspector가 스키마에 맞지 않는 값이라고 거부하는지 확인.</li>
+                </ol>
+            </div>
+
+            <h2>Step 8. Claude Desktop에 연결</h2>
+            <p>이제 실제로 Claude가 이 서버를 쓸 수 있도록 연결합시다. 04장의 방법을 그대로 씁니다.</p>
+            <div class="code-wrap">
+                <div class="code-head"><span class="lang">bash</span></div>
+<pre><code>fastmcp install claude-desktop railway_server.py</code></pre>
+            </div>
+            <p>또는 수동으로 Claude Desktop 설정 파일 편집:</p>
+            <div class="code-wrap">
+                <div class="code-head"><span class="lang">json · claude_desktop_config.json</span></div>
+<pre><code>{
+  "mcpServers": {
+    "railway-info": {
+      "command": "C:\\mcp-first\\.venv\\Scripts\\python.exe",
+      "args": ["C:\\mcp-first\\railway_server.py"]
+    }
+  }
+}</code></pre>
+            </div>
+            <p>Claude Desktop을 완전히 종료 → 재시작. 이제 Claude 대화창에서 이렇게 물어보세요.</p>
+            <div class="callout tip">
+                <span class="callout-title">Claude에게 말 걸어보기</span>
+                <ul>
+                    <li>"2호선 역 목록 알려줘"</li>
+                    <li>"서울역과 강남 사이 거리는 얼마나 돼?"</li>
+                    <li>"아침에 서울역에서 강남으로 가는 열차 중 가장 빠른 걸 알려줘"</li>
+                </ul>
+                <p>Claude가 우리 <code>railway-info</code> 서버의 Tool을 알아서 골라 호출합니다. 응답 JSON을 바탕으로 자연어 답변을 만들어 줍니다.</p>
+            </div>
+
+            <h2>전체 코드</h2>
+            <p>조각을 순서대로 합친 완성본은 별도 파일로 제공됩니다. 약 140줄이며, 이 장의 모든 예시를 포함합니다.</p>
+            <p>→ <a href="examples/railway_mcp_server.py" download><strong>examples/railway_mcp_server.py</strong> 다운로드</a></p>
+
+            <h2>실제 서비스로 넘어갈 때 바꿀 것</h2>
+            <ul>
+                <li><strong>데이터 소스</strong>: <code>STATIONS</code>·<code>TRAINS</code>를 사내 DB 조회로 교체(처음 import 시 1회 로드 또는 매 호출 시 조회).</li>
+                <li><strong>환경 변수</strong>: DB 접속 정보는 <code>os.environ</code>으로 읽고, Claude Desktop 설정 JSON의 <code>env</code>로 주입.</li>
+                <li><strong>테스트</strong>: 07장의 FastMCP Client 테스트 패턴을 참고해 CI에 자동 검증을 넣기.</li>
+                <li><strong>배포</strong>: 여러 사용자가 동시에 쓸 거라면 09장의 Streamable HTTP 배포 주제로 넘어가기.</li>
+            </ul>
+
+            <div class="callout tip">
+                <span class="callout-title">축하합니다</span>
+                <p>여기까지 따라오셨다면, 이제 여러분은 <strong>자신의 도메인에서 필요한 조회·계산 기능을 MCP 서버로 만들 수 있는 기본 역량</strong>을 갖춘 것입니다. 다음 장은 이 기반 위에서 한 단계 더 나아가고 싶을 때 참고할 수 있는 주제들을 정리합니다.</p>
+            </div>
+
+            <nav class="pager" aria-label="페이지 이동">
+                <a class="prev" href="07-best-practices.html">
+                    <span class="dir">이전</span>
+                    <span class="label">← 07. 좋은 MCP 서버 만들기</span>
+                </a>
+                <a class="next" href="09-future-study.html">
+                    <span class="dir">다음</span>
+                    <span class="label">09. 향후 추가 학습 →</span>
+                </a>
+            </nav>
+
+        </div>
+    </main>
+</div>
+</body>
+</html>

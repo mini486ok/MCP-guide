@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#4338ca">
+    <meta name="description" content="Python으로 MCP 서버를 만드는 방법을 초보자 눈높이에 맞춰 단계별로 설명한 한국어 가이드">
+    <title>Python MCP 서버 가이드 · 시작하기</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <script defer src="assets/js/main.js"></script>
+</head>
+<body>
+<div class="progress-bar" aria-hidden="true"></div>
+
+<header class="topbar" role="banner">
+    <button class="icon-btn" type="button" data-sidebar-open aria-label="메뉴 열기">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+    <span class="brand">Python MCP 서버 가이드</span>
+    <button class="icon-btn" type="button" data-theme-toggle aria-label="다크 모드 전환" aria-pressed="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
+    </button>
+</header>
+
+<div class="sidebar-backdrop" data-sidebar-close aria-hidden="true"></div>
+
+<div class="layout">
+    <aside class="sidebar" id="sidebar" aria-label="가이드 목차">
+        <div class="sidebar-header">
+            <h2 class="sidebar-title">Python MCP 서버<br>가이드라인</h2>
+            <p class="sidebar-sub">초보자를 위한 한국어 단계별 가이드</p>
+        </div>
+        <nav aria-label="목차">
+            <ol>
+                <li><a href="index.html"><span class="num">00</span><span class="title">시작하기<span class="sub">가이드 소개 · 학습 경로</span></span></a></li>
+                <li><a href="01-mcp-overview.html"><span class="num">01</span><span class="title">MCP 개요와 필요성<span class="sub">무엇이며 왜 쓰는가</span></span></a></li>
+                <li><a href="02-dev-setup.html"><span class="num">02</span><span class="title">개발 환경 설정<span class="sub">Python · 에디터 · 패키지</span></span></a></li>
+                <li><a href="03-python-basics.html"><span class="num">03</span><span class="title">Python 기초 문법<span class="sub">꼭 필요한 만큼만</span></span></a></li>
+                <li><a href="04-mcp-structure.html"><span class="num">04</span><span class="title">MCP 서버 구조<span class="sub">Tools · Resources · Prompts</span></span></a></li>
+                <li><a href="05-fastmcp-tools.html"><span class="num">05</span><span class="title">FastMCP Tool 구현<span class="sub">코드 → 스키마 매핑</span></span></a></li>
+                <li><a href="06-schema-inspection.html"><span class="num">06</span><span class="title">스키마 확인·수정<span class="sub">MCP Inspector 사용법</span></span></a></li>
+                <li><a href="07-best-practices.html"><span class="num">07</span><span class="title">좋은 MCP 서버 만들기<span class="sub">팁 · 알고리즘 설계 지침</span></span></a></li>
+                <li><a href="08-railway-example.html"><span class="num">08</span><span class="title">철도 분야 예시<span class="sub">처음부터 끝까지 따라하기</span></span></a></li>
+                <li><a href="09-future-study.html"><span class="num">09</span><span class="title">향후 추가 학습<span class="sub">Streamable HTTP · 타언어 래핑</span></span></a></li>
+            </ol>
+        </nav>
+        <div class="sidebar-footer">
+            <div>v1.0 · 2026-04-24 기준</div>
+            <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
+                <span class="theme-label">다크 모드</span>
+            </button>
+        </div>
+    </aside>
+
+    <main class="content" role="main">
+        <div class="content-inner">
+
+            <section class="hero">
+                <h1>Python으로 만드는<br>나의 첫 MCP 서버</h1>
+                <p>프로그래밍 경험이 전혀 없어도 괜찮습니다. 이 가이드는 Python 설치부터 Claude에 연결되는 MCP 서버를 완성하기까지, 가장 쉬운 길로 안내합니다.</p>
+                <div class="hero-cta">
+                    <a class="btn btn-primary" href="01-mcp-overview.html">가이드 시작하기
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+                    </a>
+                    <a class="btn btn-ghost" href="08-railway-example.html">예시부터 보고 싶어요</a>
+                </div>
+            </section>
+
+            <h2>이 가이드는 누구를 위한 것인가요?</h2>
+            <p>아래 중 하나라도 해당된다면 이 가이드가 도움이 됩니다.</p>
+            <ul class="checklist">
+                <li>SW 개발을 해본 적이 없지만, 내가 하고 있는 업무를 AI(Claude 등)가 더 잘 도와주게 만들고 싶다.</li>
+                <li>Python을 조금은 들어봤지만 자신있게 코드를 짜지는 못한다.</li>
+                <li>MATLAB · C++ · R · Excel 등 다른 도구로 작성한 알고리즘을 AI 도구로 연결해보고 싶다.</li>
+                <li>"MCP 서버"라는 말은 들어봤는데 정확히 무엇인지, 무엇이 좋은지 이해하고 싶다.</li>
+                <li>철도·교통·설비 등 현업 도메인 지식은 있지만 코드 경험이 적어서 어디서부터 시작할지 막막하다.</li>
+            </ul>
+
+            <h2>학습 경로</h2>
+            <p>총 9개 장으로 구성되어 있고, 순서대로 따라오시면 됩니다. 각 장은 보통 10~20분이면 읽을 수 있도록 짧게 나누었습니다.</p>
+            <ol class="journey">
+                <li class="step">MCP 개요와 필요성</li>
+                <li class="step">개발 환경 설정</li>
+                <li class="step">Python 기초 문법</li>
+                <li class="step">MCP 서버 구조</li>
+                <li class="step">FastMCP Tool 구현</li>
+                <li class="step">스키마 확인·수정</li>
+                <li class="step">좋은 MCP 서버 만들기</li>
+                <li class="step">철도 분야 예시</li>
+                <li class="step">향후 추가 학습</li>
+            </ol>
+
+            <div class="callout tip">
+                <span class="callout-title">학습 팁</span>
+                <p>처음부터 끝까지 한 번에 읽기보다는, <strong>02~05장까지 따라 하면서 직접 코드를 쳐보는 것</strong>을 추천합니다. 손으로 쳐본 10줄이 눈으로 읽은 100줄보다 오래 갑니다.</p>
+            </div>
+
+            <h2>어디서부터 시작하면 좋을까요?</h2>
+            <div class="cards">
+                <article class="card">
+                    <span class="card-badge">CASE 1</span>
+                    <h4>Python도 MCP도 처음이라면</h4>
+                    <p><a href="01-mcp-overview.html">01장</a>부터 순서대로. 천천히 따라와도 3~4시간이면 여러분만의 첫 MCP 서버를 완성할 수 있습니다.</p>
+                </article>
+                <article class="card">
+                    <span class="card-badge">CASE 2</span>
+                    <h4>Python은 조금 해봤다면</h4>
+                    <p><a href="02-dev-setup.html">02장</a>에서 환경만 빠르게 맞춘 뒤 <a href="04-mcp-structure.html">04장</a>부터 시작해도 좋습니다.</p>
+                </article>
+                <article class="card">
+                    <span class="card-badge">CASE 3</span>
+                    <h4>이미 다른 언어로 알고리즘이 있다면</h4>
+                    <p><a href="07-best-practices.html">07장</a>(MCP 지향 설계)과 <a href="09-future-study.html">09장</a>(MATLAB/C++/R 래핑)부터 훑어보세요.</p>
+                </article>
+            </div>
+
+            <h2>이 가이드가 다루는 범위</h2>
+            <div class="cards">
+                <article class="card">
+                    <h4>포함된 내용</h4>
+                    <p>MCP 개념, Python 기초, FastMCP 사용법, Tool 구현, 스키마 자동 생성 규칙, MCP Inspector 검증, 철도 분야 실습 예제.</p>
+                </article>
+                <article class="card">
+                    <h4>다루지 않는 내용</h4>
+                    <p>TypeScript 버전 MCP 서버, MCP 클라이언트(호스트) 직접 구현, 프로덕션 배포의 상세 인증/권한 설계. 09장에서 진입점만 안내합니다.</p>
+                </article>
+            </div>
+
+            <div class="callout info">
+                <span class="callout-title">기준 환경</span>
+                <p>본 가이드는 <strong>Windows 11</strong>에서 <strong>Python 3.11+</strong>와 <strong>fastmcp</strong> 패키지(2026년 4월 기준 최신 버전)를 사용한다는 전제로 작성되었습니다. macOS/Linux 사용자는 일부 명령만 다르며 본문 내 보조 박스에 함께 적어 두었습니다.</p>
+            </div>
+
+            <nav class="pager" aria-label="페이지 이동">
+                <a class="next" href="01-mcp-overview.html">
+                    <span class="dir">다음</span>
+                    <span class="label">01. MCP 개요와 필요성 →</span>
+                </a>
+            </nav>
+
+        </div>
+    </main>
+</div>
+</body>
+</html>

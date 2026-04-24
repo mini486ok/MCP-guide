@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#4338ca">
+    <meta name="description" content="좋은 MCP 서버를 만들기 위한 실전 팁 10가지와, 새로 알고리즘을 개발할 때 향후 MCP 서버화를 고려해 설계하는 방법을 다룹니다.">
+    <title>07. 좋은 MCP 서버 만들기 · Python MCP 서버 가이드</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <script defer src="assets/js/main.js"></script>
+</head>
+<body>
+<div class="progress-bar" aria-hidden="true"></div>
+
+<header class="topbar" role="banner">
+    <button class="icon-btn" type="button" data-sidebar-open aria-label="메뉴 열기">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+    <span class="brand">07. 좋은 MCP 서버</span>
+    <button class="icon-btn" type="button" data-theme-toggle aria-label="다크 모드 전환" aria-pressed="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
+    </button>
+</header>
+
+<div class="sidebar-backdrop" data-sidebar-close aria-hidden="true"></div>
+
+<div class="layout">
+    <aside class="sidebar" id="sidebar" aria-label="가이드 목차">
+        <div class="sidebar-header">
+            <h2 class="sidebar-title">Python MCP 서버<br>가이드라인</h2>
+            <p class="sidebar-sub">초보자를 위한 한국어 단계별 가이드</p>
+        </div>
+        <nav aria-label="목차">
+            <ol>
+                <li><a href="index.html"><span class="num">00</span><span class="title">시작하기<span class="sub">가이드 소개 · 학습 경로</span></span></a></li>
+                <li><a href="01-mcp-overview.html"><span class="num">01</span><span class="title">MCP 개요와 필요성<span class="sub">무엇이며 왜 쓰는가</span></span></a></li>
+                <li><a href="02-dev-setup.html"><span class="num">02</span><span class="title">개발 환경 설정<span class="sub">Python · 에디터 · 패키지</span></span></a></li>
+                <li><a href="03-python-basics.html"><span class="num">03</span><span class="title">Python 기초 문법<span class="sub">꼭 필요한 만큼만</span></span></a></li>
+                <li><a href="04-mcp-structure.html"><span class="num">04</span><span class="title">MCP 서버 구조<span class="sub">Tools · Resources · Prompts</span></span></a></li>
+                <li><a href="05-fastmcp-tools.html"><span class="num">05</span><span class="title">FastMCP Tool 구현<span class="sub">코드 → 스키마 매핑</span></span></a></li>
+                <li><a href="06-schema-inspection.html"><span class="num">06</span><span class="title">스키마 확인·수정<span class="sub">MCP Inspector 사용법</span></span></a></li>
+                <li><a href="07-best-practices.html"><span class="num">07</span><span class="title">좋은 MCP 서버 만들기<span class="sub">팁 · 알고리즘 설계 지침</span></span></a></li>
+                <li><a href="08-railway-example.html"><span class="num">08</span><span class="title">철도 분야 예시<span class="sub">처음부터 끝까지 따라하기</span></span></a></li>
+                <li><a href="09-future-study.html"><span class="num">09</span><span class="title">향후 추가 학습<span class="sub">Streamable HTTP · 타언어 래핑</span></span></a></li>
+            </ol>
+        </nav>
+        <div class="sidebar-footer">
+            <div>v1.0 · 2026-04-24 기준</div>
+            <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
+                <span class="theme-label">다크 모드</span>
+            </button>
+        </div>
+    </aside>
+
+    <main class="content" role="main">
+        <div class="content-inner">
+
+            <nav class="breadcrumb" aria-label="경로">
+                <a href="index.html">홈</a>
+                <span class="sep">›</span>
+                <span>07. 좋은 MCP 서버 만들기</span>
+            </nav>
+
+            <h1 class="page-title">좋은 MCP 서버 만들기</h1>
+            <p class="page-lead">동작하는 서버는 쉽습니다. AI가 잘 활용하는 "좋은" 서버는 어떻게 만드나—이 장은 실전 팁 10가지와, 새 알고리즘을 개발할 때부터 MCP화를 염두에 두고 설계하는 방법을 다룹니다.</p>
+            <div class="page-meta">
+                <span class="chip">예상 학습 시간 · 20분</span>
+                <span class="chip chip-ghost">실전 팁</span>
+            </div>
+
+            <h2>Part A · 좋은 MCP 서버를 만드는 10가지 팁</h2>
+
+            <h3>1. Tool 이름은 동사로, 범위는 예측 가능하게</h3>
+            <p>좋은 이름: <code>get_station_info</code>, <code>calc_travel_time</code>. 나쁜 이름: <code>helper</code>, <code>process</code>. AI는 이름을 보고 "이 도구가 뭘 하는지" 먼저 판단합니다. 동사로 시작하는 이름이 좋고, 범위(입력·출력)가 이름에서 유추되어야 합니다.</p>
+
+            <h3>2. Docstring은 "AI가 보는 사용 설명서"</h3>
+            <p>사람끼리 쓰는 주석과 다릅니다. 구체적으로 쓰세요.</p>
+            <div class="mapping-split">
+                <div class="side">
+                    <div class="side-head">나쁜 예</div>
+<pre>"""거리를 계산한다."""</pre>
+                </div>
+                <div class="side">
+                    <div class="side-head">좋은 예</div>
+<pre>"""두 역 사이의 직선 거리(킬로미터)를
+계산합니다. 위도·경도 기반 하버사인 공식
+사용. 존재하지 않는 역 이름은
+ValueError를 던집니다."""</pre>
+                </div>
+            </div>
+
+            <h3>3. 파라미터는 적게, 필요하면 BaseModel로 묶기</h3>
+            <p>파라미터가 4개를 넘어가면 AI가 값을 채우다가 실수하기 쉽습니다. 관련 있는 것들은 객체로 묶으세요.</p>
+            <div class="code-wrap">
+                <div class="code-head"><span class="lang">python</span></div>
+<pre><code>class SearchFilter(BaseModel):
+    departure: str
+    arrival: str
+    max_transfers: int = 1
+    max_duration_min: int = 120
+
+@mcp.tool
+def find_trains(filter: SearchFilter) -&gt; list[Train]:
+    """주어진 조건에 맞는 열차를 검색합니다."""
+    ...</code></pre>
+            </div>
+
+            <h3>4. 오류는 "사람이 읽는 메시지"로 예외 발생</h3>
+            <p>예외 메시지는 그대로 AI에게 전달됩니다. 한국어든 영어든 <strong>문장으로</strong> 쓰세요.</p>
+            <div class="code-wrap">
+                <div class="code-head"><span class="lang">python</span></div>
+<pre><code># 좋음
+raise ValueError("'도쿄역'은 이 서비스가 관리하는 역 목록에 없습니다.")
+
+# 나쁨
+raise Exception("ERR_42")</code></pre>
+            </div>
+
+            <h3>5. 응답은 구조화된 데이터로</h3>
+            <p>긴 문자열로 한 덩어리를 돌려주기보다 <strong>BaseModel(또는 dict)</strong>로 필드를 나눠 돌려주면 AI가 더 잘 활용합니다. 후속 Tool 호출에서 특정 필드만 꺼내 쓰기 쉽기 때문입니다.</p>
+
+            <h3>6. 외부 호출에는 타임아웃과 재시도</h3>
+            <p>사내 DB/API를 부르는 Tool이라면 <code>httpx.Client(timeout=5.0)</code>처럼 타임아웃을 꼭 지정하세요. 무한 대기는 Claude Desktop을 멈춘 것처럼 보이게 합니다.</p>
+
+            <h3>7. 비밀값은 코드가 아니라 환경 변수로</h3>
+            <p>API 키·DB 비밀번호 같은 것은 코드에 박지 말고 <code>os.environ["DB_PASSWORD"]</code>로 읽으세요. MCP 설정 JSON의 <code>env</code>에 지정하면 됩니다.</p>
+            <div class="code-wrap">
+                <div class="code-head"><span class="lang">json · claude_desktop_config.json</span></div>
+<pre><code>{
+  "mcpServers": {
+    "railway": {
+      "command": "python",
+      "args": ["C:\\mcp-first\\server.py"],
+      "env": {
+        "DB_PASSWORD": "여기에_비밀번호"
+      }
+    }
+  }
+}</code></pre>
+            </div>
+
+            <h3>8. 단위 테스트는 FastMCP Client로</h3>
+            <p>서버를 띄우지 않고도 Tool을 호출해볼 수 있는 클라이언트가 내장되어 있습니다. pytest와 조합해 회귀 테스트를 쉽게 작성할 수 있습니다.</p>
+            <div class="code-wrap">
+                <div class="code-head"><span class="lang">python · test_hello.py</span></div>
+<pre><code>import pytest
+from fastmcp import Client
+from hello import mcp  # 우리 서버 인스턴스
+
+@pytest.mark.asyncio
+async def test_hello():
+    async with Client(mcp) as client:
+        result = await client.call_tool("hello", {"name": "미나"})
+        assert "미나" in result.data</code></pre>
+            </div>
+
+            <h3>9. 로깅은 <code>logging</code> 모듈, 출력은 stderr</h3>
+            <p>stdio transport는 stdout을 프로토콜 전송에 쓰기 때문에, <strong>우리 로그를 stdout으로 찍으면 프로토콜이 깨집니다</strong>. 반드시 <code>logging</code> 모듈을 쓰거나, <code>print(..., file=sys.stderr)</code>로 찍으세요.</p>
+            <div class="code-wrap">
+                <div class="code-head"><span class="lang">python</span></div>
+<pre><code>import logging
+logging.basicConfig(level=logging.INFO)  # 기본은 stderr
+log = logging.getLogger(__name__)
+
+@mcp.tool
+def get_station(name: str) -&gt; Station:
+    log.info("get_station 호출: %s", name)
+    ...</code></pre>
+            </div>
+
+            <h3>10. Inspector로 스키마 회귀를 주기적으로</h3>
+            <p>코드 리팩터링 후 Inspector를 한 번만 열어 보면, 스키마가 의도치 않게 바뀐 것을 즉시 알 수 있습니다. 릴리스 직전에는 반드시 확인하세요.</p>
+
+            <hr>
+
+            <h2>Part B · 새 알고리즘을 개발할 때: MCP 서버화를 고려한 설계</h2>
+            <p>지금부터 새로 개발할 알고리즘이라면, 처음부터 <strong>나중에 MCP Tool로 감싸기 쉬운 형태</strong>로 짜는 것이 유리합니다. 다음 7가지 원칙을 지키면 MCP화 시 거의 "그대로 복붙"하면 됩니다.</p>
+
+            <h3>원칙 1 — "알고리즘 코어"와 "입출력 껍질"을 분리</h3>
+            <p>파일을 직접 읽고, CSV를 파싱하고, 결과를 화면에 출력하는 코드는 껍질입니다. <strong>코어 계산 함수</strong>는 파일 경로나 print와 무관해야 합니다. 그래야 Tool에서 그대로 호출 가능합니다.</p>
+            <div class="mapping-split">
+                <div class="side">
+                    <div class="side-head">나쁜 예 — 코어와 껍질이 섞임</div>
+<pre>def run():
+    df = pd.read_csv("stations.csv")
+    a = input("출발: ")
+    b = input("도착: ")
+    print(calc(df, a, b))</pre>
+                </div>
+                <div class="side">
+                    <div class="side-head">좋은 예 — 코어는 순수 함수</div>
+<pre>def shortest_path(
+    graph: dict,
+    start: str,
+    end: str,
+) -&gt; list[str]:
+    ...
+
+# 껍질은 별도 파일에서
+def main():
+    graph = load_graph("stations.csv")
+    print(shortest_path(graph, "서울역", "종각"))</pre>
+                </div>
+            </div>
+
+            <h3>원칙 2 — 입력·출력은 JSON으로 표현 가능한 타입</h3>
+            <p>pandas DataFrame, numpy 배열 같은 복잡한 객체를 Tool 인자로 받을 수는 없습니다(직렬화되지 않으니까요). 실제 입력은 <strong>str, int, float, bool, list, dict, BaseModel</strong> 중 하나여야 합니다. 내부 구현에서는 얼마든지 DataFrame을 써도 되지만, 인터페이스(함수 인자·반환값)는 단순하게 유지하세요.</p>
+
+            <h3>원칙 3 — 파일 경로 대신 "내용" 또는 "식별자"</h3>
+            <p>Tool이 "/Users/abc/desktop/file.csv"를 인자로 받으면, 원격 배포로 넘어가는 순간 동작하지 않습니다. 대신:</p>
+            <ul>
+                <li>작은 데이터라면 <strong>내용 자체</strong>를 문자열/리스트로 받기</li>
+                <li>큰 데이터라면 <strong>식별자</strong>(예: <code>station_id</code>)를 받아 서버가 스스로 조회</li>
+            </ul>
+
+            <h3>원칙 4 — 같은 입력에 같은 출력(순수 함수 지향)</h3>
+            <p>시간·랜덤 같은 외부 상태에 의존하는 함수는 테스트·재시도가 어렵습니다. 필요하면 시각도 인자로 받아(<code>as_of: datetime</code>) 순수 함수로 만드세요.</p>
+
+            <h3>원칙 5 — 긴 작업은 "시작 / 상태 / 결과" 3-Tool 패턴</h3>
+            <p>10초 이상 걸리는 시뮬레이션은 한 Tool로 감싸면 타임아웃에 걸리기 쉽습니다. 다음처럼 쪼개면 AI가 진행을 "기다릴" 수 있습니다.</p>
+            <div class="code-wrap">
+                <div class="code-head"><span class="lang">python</span></div>
+<pre><code>@mcp.tool
+def start_simulation(params: SimParams) -&gt; str:
+    """시뮬레이션을 시작하고 job_id를 돌려줍니다."""
+
+@mcp.tool
+def get_simulation_status(job_id: str) -&gt; JobStatus:
+    """job의 상태(running/done/failed)를 조회합니다."""
+
+@mcp.tool
+def get_simulation_result(job_id: str) -&gt; SimResult:
+    """완료된 job의 결과를 조회합니다."""</code></pre>
+            </div>
+
+            <h3>원칙 6 — 처음부터 타입 힌트와 docstring</h3>
+            <p>개발 단계에서 잠깐 생략하고 싶은 유혹이 있지만, 나중에 MCP화할 때 결국 전부 다시 적어야 합니다. <strong>처음부터</strong> 적는 것이 시간 총량이 더 적습니다.</p>
+
+            <h3>원칙 7 — 설정은 인자 또는 환경 변수, 전역 상태 지양</h3>
+            <p>모듈 최상단의 <code>HOST = "..."</code> 같은 전역 변수는 MCP 환경에서 바꾸기 어렵습니다. 설정은 함수 인자로 받거나 환경 변수로 읽도록 설계하세요.</p>
+
+            <h2>리팩터링 실습: "단순 스크립트 → MCP 친화 코드"</h2>
+            <p>아래는 철도 현업에서 흔히 보는 초기 코드입니다. 동작은 하지만 MCP로 노출하기에는 손이 많이 갑니다.</p>
+            <div class="code-wrap">
+                <div class="code-head"><span class="lang">python · before.py (나쁜 예)</span></div>
+<pre><code>import pandas as pd
+
+def run():
+    df = pd.read_csv("stations.csv")
+    a = input("출발역: ")
+    b = input("도착역: ")
+    rows = df[(df["name"] == a) | (df["name"] == b)]
+    dist = ((rows.lat.iloc[0] - rows.lat.iloc[1]) ** 2 +
+            (rows.lng.iloc[0] - rows.lng.iloc[1]) ** 2) ** 0.5
+    print("거리:", dist)
+
+if __name__ == "__main__":
+    run()</code></pre>
+            </div>
+            <p>이를 "MCP 친화" 형태로 다듬으면 이렇게 됩니다.</p>
+            <div class="code-wrap">
+                <div class="code-head"><span class="lang">python · after.py (좋은 예)</span></div>
+<pre><code>from math import radians, sin, cos, asin, sqrt
+from pydantic import BaseModel
+import pandas as pd
+
+class DistanceResult(BaseModel):
+    departure: str
+    arrival: str
+    distance_km: float
+
+
+def _haversine(lat1, lng1, lat2, lng2) -&gt; float:
+    # 위·경도를 받아 지표 위 직선 거리(km)를 돌려주는 순수 함수
+    R = 6371.0
+    dlat = radians(lat2 - lat1)
+    dlng = radians(lng2 - lng1)
+    a = sin(dlat/2)**2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlng/2)**2
+    return 2 * R * asin(sqrt(a))
+
+
+def distance_between(
+    stations: pd.DataFrame, a: str, b: str
+) -&gt; DistanceResult:
+    """두 역 사이의 직선 거리(km)를 계산합니다.
+
+    Args:
+        stations: 'name','lat','lng' 컬럼을 가진 역 테이블.
+        a: 출발역 이름.
+        b: 도착역 이름.
+    """
+    row_a = stations[stations["name"] == a].iloc[0]
+    row_b = stations[stations["name"] == b].iloc[0]
+    km = _haversine(row_a.lat, row_a.lng, row_b.lat, row_b.lng)
+    return DistanceResult(departure=a, arrival=b, distance_km=km)</code></pre>
+            </div>
+            <p>이제 <code>distance_between</code>을 그대로 Tool로 감쌀 수 있습니다. <code>stations</code> 인자는 서버 시작 시 한 번 로드해 두고, Tool에서는 역 이름만 받도록 얇은 래퍼를 씌우면 끝입니다.</p>
+            <div class="code-wrap">
+                <div class="code-head"><span class="lang">python · server.py (래퍼 예시)</span></div>
+<pre><code>from fastmcp import FastMCP
+from after import distance_between, DistanceResult
+import pandas as pd
+
+mcp = FastMCP("railway-core")
+STATIONS = pd.read_csv("stations.csv")   # 서버 시작 시 1회 로드
+
+@mcp.tool
+def distance(a: str, b: str) -&gt; DistanceResult:
+    """두 역 사이의 직선 거리를 계산합니다."""
+    return distance_between(STATIONS, a, b)
+
+if __name__ == "__main__":
+    mcp.run()</code></pre>
+            </div>
+
+            <div class="callout tip">
+                <span class="callout-title">장 요약</span>
+                <p>좋은 MCP 서버는 "예쁜 이름 + 명확한 docstring + 구조화된 입출력 + 적절한 오류"의 합입니다. 그리고 새로운 알고리즘을 짤 때 <strong>"코어/껍질 분리 + 순수 함수 + 타입 힌트"</strong>라는 좋은 습관 세 가지만 지키면, MCP화는 거의 무상으로 이루어집니다.</p>
+            </div>
+
+            <nav class="pager" aria-label="페이지 이동">
+                <a class="prev" href="06-schema-inspection.html">
+                    <span class="dir">이전</span>
+                    <span class="label">← 06. 스키마 확인·수정</span>
+                </a>
+                <a class="next" href="08-railway-example.html">
+                    <span class="dir">다음</span>
+                    <span class="label">08. 철도 분야 예시 →</span>
+                </a>
+            </nav>
+
+        </div>
+    </main>
+</div>
+</body>
+</html>

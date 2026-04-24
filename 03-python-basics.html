@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#4338ca">
+    <meta name="description" content="MCP 서버를 만들 때 꼭 필요한 Python 문법만 간결하게 소개합니다. 타입 힌트와 docstring을 특히 비중 있게 다룹니다.">
+    <title>03. Python 기초 문법 · Python MCP 서버 가이드</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <script defer src="assets/js/main.js"></script>
+</head>
+<body>
+<div class="progress-bar" aria-hidden="true"></div>
+
+<header class="topbar" role="banner">
+    <button class="icon-btn" type="button" data-sidebar-open aria-label="메뉴 열기">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+    <span class="brand">03. Python 기초</span>
+    <button class="icon-btn" type="button" data-theme-toggle aria-label="다크 모드 전환" aria-pressed="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
+    </button>
+</header>
+
+<div class="sidebar-backdrop" data-sidebar-close aria-hidden="true"></div>
+
+<div class="layout">
+    <aside class="sidebar" id="sidebar" aria-label="가이드 목차">
+        <div class="sidebar-header">
+            <h2 class="sidebar-title">Python MCP 서버<br>가이드라인</h2>
+            <p class="sidebar-sub">초보자를 위한 한국어 단계별 가이드</p>
+        </div>
+        <nav aria-label="목차">
+            <ol>
+                <li><a href="index.html"><span class="num">00</span><span class="title">시작하기<span class="sub">가이드 소개 · 학습 경로</span></span></a></li>
+                <li><a href="01-mcp-overview.html"><span class="num">01</span><span class="title">MCP 개요와 필요성<span class="sub">무엇이며 왜 쓰는가</span></span></a></li>
+                <li><a href="02-dev-setup.html"><span class="num">02</span><span class="title">개발 환경 설정<span class="sub">Python · 에디터 · 패키지</span></span></a></li>
+                <li><a href="03-python-basics.html"><span class="num">03</span><span class="title">Python 기초 문법<span class="sub">꼭 필요한 만큼만</span></span></a></li>
+                <li><a href="04-mcp-structure.html"><span class="num">04</span><span class="title">MCP 서버 구조<span class="sub">Tools · Resources · Prompts</span></span></a></li>
+                <li><a href="05-fastmcp-tools.html"><span class="num">05</span><span class="title">FastMCP Tool 구현<span class="sub">코드 → 스키마 매핑</span></span></a></li>
+                <li><a href="06-schema-inspection.html"><span class="num">06</span><span class="title">스키마 확인·수정<span class="sub">MCP Inspector 사용법</span></span></a></li>
+                <li><a href="07-best-practices.html"><span class="num">07</span><span class="title">좋은 MCP 서버 만들기<span class="sub">팁 · 알고리즘 설계 지침</span></span></a></li>
+                <li><a href="08-railway-example.html"><span class="num">08</span><span class="title">철도 분야 예시<span class="sub">처음부터 끝까지 따라하기</span></span></a></li>
+                <li><a href="09-future-study.html"><span class="num">09</span><span class="title">향후 추가 학습<span class="sub">Streamable HTTP · 타언어 래핑</span></span></a></li>
+            </ol>
+        </nav>
+        <div class="sidebar-footer">
+            <div>v1.0 · 2026-04-24 기준</div>
+            <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
+                <span class="theme-label">다크 모드</span>
+            </button>
+        </div>
+    </aside>
+
+    <main class="content" role="main">
+        <div class="content-inner">
+
+            <nav class="breadcrumb" aria-label="경로">
+                <a href="index.html">홈</a>
+                <span class="sep">›</span>
+                <span>03. Python 기초 문법</span>
+            </nav>
+
+            <h1 class="page-title">Python 기초 문법</h1>
+            <p class="page-lead">MCP 서버를 만들 때 실제로 필요한 만큼만 빠르게 훑습니다. 이 장을 끝내면 이후 장의 모든 코드를 읽을 수 있습니다.</p>
+            <div class="page-meta">
+                <span class="chip">예상 학습 시간 · 20분</span>
+                <span class="chip chip-ghost">실습 권장</span>
+            </div>
+
+            <div class="callout info">
+                <span class="callout-title">이 장의 목표</span>
+                <p>Python의 모든 문법을 가르치는 것이 아닙니다. <strong>MCP 서버 코드를 읽고 이해하는 데 필요한 최소한</strong>만 압축해서 소개합니다. 더 깊이 공부하고 싶다면 페이지 맨 아래 "더 배우기" 링크를 참고하세요.</p>
+            </div>
+
+            <h2>1. 화면에 값 출력하기</h2>
+            <p>제일 간단한 프로그램입니다.</p>
+            <div class="code-wrap">
+                <div class="code-head"><span class="lang">python</span></div>
+<pre><code>print("안녕하세요!")
+print(1 + 2)  # 3</code></pre>
+            </div>
+            <p><code>#</code> 뒤의 글자는 주석(사람이 읽는 메모)입니다.</p>
+
+            <h2>2. 변수와 기본 타입</h2>
+            <p>값에 이름을 붙여 저장하는 것이 변수입니다. Python은 값을 보고 타입을 자동으로 판단합니다.</p>
+            <div class="code-wrap">
+                <div class="code-head"><span class="lang">python</span></div>
+<pre><code>station_name = "강남역"       # str  (문자열)
+platform = 3                  # int  (정수)
+distance_km = 1.8             # float(실수)
+is_transfer = True            # bool (참/거짓: True 또는 False)</code></pre>
+            </div>
+            <p>문자열은 f-string으로 다른 값을 끼워넣을 수 있습니다(매우 자주 씁니다).</p>
+            <div class="code-wrap">
+                <div class="code-head"><span class="lang">python</span></div>
+<pre><code>msg = f"{station_name}의 승강장은 {platform}번입니다."
+print(msg)  # 강남역의 승강장은 3번입니다.</code></pre>
+            </div>
+
+            <h2>3. 리스트와 딕셔너리</h2>
+            <p>여러 값을 묶어 저장할 때 가장 많이 쓰이는 두 자료구조입니다.</p>
+            <h3>리스트(list)</h3>
+            <p>순서가 있는 값의 묶음입니다. <code>[ ]</code>를 씁니다.</p>
+            <div class="code-wrap">
+                <div class="code-head"><span class="lang">python</span></div>
+<pre><code>stations = ["서울역", "시청", "종각", "종로3가"]
+print(stations[0])      # "서울역" — 첫 번째는 0번
+print(len(stations))    # 4
+stations.append("종로5가")</code></pre>
+            </div>
+            <h3>딕셔너리(dict)</h3>
+            <p>"키 → 값" 짝을 저장합니다. <code>{ }</code>를 씁니다. 한 줄로 여러 속성을 표현할 때 씁니다.</p>
+            <div class="code-wrap">
+                <div class="code-head"><span class="lang">python</span></div>
+<pre><code>station = {
+    "name": "서울역",
+    "line": 1,
+    "lat": 37.5547,
+    "lng": 126.9707,
+}
+print(station["name"])   # "서울역"
+station["line"] = 4      # 값 수정</code></pre>
+            </div>
+            <div class="callout tip">
+                <span class="callout-title">왜 중요한가?</span>
+                <p>MCP 서버가 AI에게 돌려주는 데이터는 대부분 <strong>딕셔너리(또는 딕셔너리의 리스트)</strong> 형태입니다. 이 두 가지만 자연스럽게 다룰 수 있으면 우리 가이드를 끝까지 따라올 수 있습니다.</p>
+            </div>
+
+            <h2>4. 조건문과 반복문</h2>
+            <p>들여쓰기(띄어쓰기 4칸)가 매우 중요합니다. 같은 들여쓰기가 "같은 묶음"을 뜻합니다.</p>
+            <div class="code-wrap">
+                <div class="code-head"><span class="lang">python</span></div>
+<pre><code>speed = 85
+
+if speed &gt; 100:
+    print("과속입니다")
+elif speed &gt; 80:
+    print("주의 구간")
+else:
+    print("정상")
+
+for name in stations:
+    print(name)</code></pre>
+            </div>
+
+            <h2>5. 함수 정의</h2>
+            <p>함수는 <strong>MCP Tool의 기본 단위</strong>입니다. 조금만 더 자세히 보겠습니다.</p>
+            <div class="code-wrap">
+                <div class="code-head"><span class="lang">python</span></div>
+<pre><code>def add(a, b):
+    return a + b
+
+result = add(3, 5)
+print(result)  # 8</code></pre>
+            </div>
+            <ul>
+                <li><code>def</code>로 시작해서 함수 이름을 정합니다(여기선 <code>add</code>).</li>
+                <li>괄호 안은 <strong>매개변수</strong>(이 함수가 받는 입력).</li>
+                <li><code>return</code>으로 값을 돌려줍니다.</li>
+            </ul>
+
+            <h2>6. 타입 힌트 <span class="chip" style="vertical-align:middle;">핵심</span></h2>
+            <p>Python은 원래 타입을 굳이 쓰지 않아도 되지만, <strong>MCP에서는 타입을 반드시 적어줘야 합니다</strong>. 왜냐하면 FastMCP가 이 타입 정보를 읽어 "AI에게 알려줄 입력·출력 형식"을 자동으로 만들기 때문입니다.</p>
+            <div class="code-wrap">
+                <div class="code-head"><span class="lang">python</span></div>
+<pre><code>def add(a: int, b: int) -> int:
+    return a + b</code></pre>
+            </div>
+            <ul>
+                <li><code>a: int</code> — "a는 정수"라고 알려주는 표시.</li>
+                <li><code>-&gt; int</code> — "이 함수는 정수를 반환"이라는 표시.</li>
+            </ul>
+            <p>자주 쓰는 타입은 이 정도입니다.</p>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>타입</th><th>의미</th><th>예시 값</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>int</code></td><td>정수</td><td><code>3</code>, <code>-7</code></td></tr>
+                        <tr><td><code>float</code></td><td>실수</td><td><code>1.8</code>, <code>0.0</code></td></tr>
+                        <tr><td><code>str</code></td><td>문자열</td><td><code>"강남역"</code></td></tr>
+                        <tr><td><code>bool</code></td><td>참/거짓</td><td><code>True</code>, <code>False</code></td></tr>
+                        <tr><td><code>list[str]</code></td><td>문자열의 리스트</td><td><code>["A", "B"]</code></td></tr>
+                        <tr><td><code>dict[str, int]</code></td><td>키는 문자열, 값은 정수인 딕셔너리</td><td><code>{"x": 1, "y": 2}</code></td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h2>7. Docstring <span class="chip" style="vertical-align:middle;">핵심</span></h2>
+            <p>함수 바로 아래에 <code>""" ... """</code>(삼중 따옴표)로 적는 설명문입니다. <strong>FastMCP가 이 설명을 그대로 읽어 AI에게 전달</strong>하므로 MCP에서는 특히 중요합니다.</p>
+            <div class="code-wrap">
+                <div class="code-head"><span class="lang">python</span></div>
+<pre><code>def add(a: int, b: int) -&gt; int:
+    """두 정수를 더해 그 합을 돌려줍니다.
+
+    Args:
+        a: 첫 번째 정수.
+        b: 두 번째 정수.
+
+    Returns:
+        a + b 의 결과값.
+    """
+    return a + b</code></pre>
+            </div>
+            <div class="callout tip">
+                <span class="callout-title">외우는 팁</span>
+                <p>MCP에서는 docstring을 <strong>"AI가 읽는 사용 설명서"</strong>라고 생각하세요. 잘 쓰면 AI가 내 함수를 더 똑똑하게 활용합니다. 이 부분은 <a href="05-fastmcp-tools.html">05장</a>에서 구체적으로 이어집니다.</p>
+            </div>
+
+            <h2>8. import 와 실행 진입점</h2>
+            <p>다른 파일이나 라이브러리의 기능을 가져다 쓰려면 <code>import</code>를 씁니다.</p>
+            <div class="code-wrap">
+                <div class="code-head"><span class="lang">python</span></div>
+<pre><code>from fastmcp import FastMCP   # fastmcp 라이브러리에서 FastMCP 클래스만 가져오기
+import math                   # math 모듈 전체 가져오기
+print(math.pi)                # 3.141592...</code></pre>
+            </div>
+            <p>파이썬 파일 맨 아래에 자주 보이는 마법의 줄:</p>
+            <div class="code-wrap">
+                <div class="code-head"><span class="lang">python</span></div>
+<pre><code>if __name__ == "__main__":
+    mcp.run()</code></pre>
+            </div>
+            <p>"이 파일을 직접 실행했을 때만 <code>mcp.run()</code>을 돌려라"라는 뜻입니다. 다른 파일에서 <code>import</code>로 불러올 때는 건너뛰게 합니다. <strong>MCP 서버 파일에서는 거의 매번</strong> 이 패턴을 쓰게 됩니다.</p>
+
+            <h2>9. 작게 연습해보기</h2>
+            <div class="callout lab">
+                <span class="callout-title">실습 — 5분</span>
+                <p>다음 함수를 VS Code에서 <code>practice.py</code>로 만들고 직접 실행해 보세요. 입력을 바꿔가며 결과를 확인하세요.</p>
+            </div>
+            <div class="code-wrap">
+                <div class="code-head"><span class="lang">python · practice.py</span></div>
+<pre><code>def greet(name: str, loud: bool = False) -&gt; str:
+    """이름을 받아 인사말을 돌려줍니다.
+
+    Args:
+        name: 인사할 대상의 이름.
+        loud: True이면 대문자로 돌려줍니다.
+
+    Returns:
+        완성된 인사말 문자열.
+    """
+    message = f"안녕하세요, {name}님!"
+    if loud:
+        message = message.upper()
+    return message
+
+
+if __name__ == "__main__":
+    print(greet("미나"))
+    print(greet("Claude", loud=True))</code></pre>
+            </div>
+
+            <h2>더 배우기</h2>
+            <ul>
+                <li><a href="https://wikidocs.net/book/1" target="_blank" rel="noopener">점프 투 파이썬 (박응용)</a> — 한국어 무료 전자책. 처음 배우는 사람에게 추천.</li>
+                <li><a href="https://docs.python.org/ko/3/tutorial/" target="_blank" rel="noopener">Python 공식 튜토리얼 (한국어)</a></li>
+                <li><a href="https://realpython.com/python-type-checking/" target="_blank" rel="noopener">Real Python — Type Checking</a> (영문, 타입 힌트 심화)</li>
+            </ul>
+
+            <div class="callout tip">
+                <span class="callout-title">중간 점검</span>
+                <p>이제 변수·리스트·딕셔너리·함수·타입 힌트·docstring을 만났습니다. 이 여섯 가지만 기억하면 다음 장의 MCP 코드를 읽는 데 전혀 무리가 없습니다.</p>
+            </div>
+
+            <nav class="pager" aria-label="페이지 이동">
+                <a class="prev" href="02-dev-setup.html">
+                    <span class="dir">이전</span>
+                    <span class="label">← 02. 개발 환경 설정</span>
+                </a>
+                <a class="next" href="04-mcp-structure.html">
+                    <span class="dir">다음</span>
+                    <span class="label">04. MCP 서버 구조 →</span>
+                </a>
+            </nav>
+
+        </div>
+    </main>
+</div>
+</body>
+</html>

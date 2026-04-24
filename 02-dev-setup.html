@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#4338ca">
+    <meta name="description" content="Windows에서 Python과 MCP 개발을 위한 환경을 단계별로 셋업합니다. 설치 확인과 자주 발생하는 오류 대응까지 다룹니다.">
+    <title>02. 개발 환경 설정 · Python MCP 서버 가이드</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <script defer src="assets/js/main.js"></script>
+</head>
+<body>
+<div class="progress-bar" aria-hidden="true"></div>
+
+<header class="topbar" role="banner">
+    <button class="icon-btn" type="button" data-sidebar-open aria-label="메뉴 열기">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+    <span class="brand">02. 개발 환경 설정</span>
+    <button class="icon-btn" type="button" data-theme-toggle aria-label="다크 모드 전환" aria-pressed="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
+    </button>
+</header>
+
+<div class="sidebar-backdrop" data-sidebar-close aria-hidden="true"></div>
+
+<div class="layout">
+    <aside class="sidebar" id="sidebar" aria-label="가이드 목차">
+        <div class="sidebar-header">
+            <h2 class="sidebar-title">Python MCP 서버<br>가이드라인</h2>
+            <p class="sidebar-sub">초보자를 위한 한국어 단계별 가이드</p>
+        </div>
+        <nav aria-label="목차">
+            <ol>
+                <li><a href="index.html"><span class="num">00</span><span class="title">시작하기<span class="sub">가이드 소개 · 학습 경로</span></span></a></li>
+                <li><a href="01-mcp-overview.html"><span class="num">01</span><span class="title">MCP 개요와 필요성<span class="sub">무엇이며 왜 쓰는가</span></span></a></li>
+                <li><a href="02-dev-setup.html"><span class="num">02</span><span class="title">개발 환경 설정<span class="sub">Python · 에디터 · 패키지</span></span></a></li>
+                <li><a href="03-python-basics.html"><span class="num">03</span><span class="title">Python 기초 문법<span class="sub">꼭 필요한 만큼만</span></span></a></li>
+                <li><a href="04-mcp-structure.html"><span class="num">04</span><span class="title">MCP 서버 구조<span class="sub">Tools · Resources · Prompts</span></span></a></li>
+                <li><a href="05-fastmcp-tools.html"><span class="num">05</span><span class="title">FastMCP Tool 구현<span class="sub">코드 → 스키마 매핑</span></span></a></li>
+                <li><a href="06-schema-inspection.html"><span class="num">06</span><span class="title">스키마 확인·수정<span class="sub">MCP Inspector 사용법</span></span></a></li>
+                <li><a href="07-best-practices.html"><span class="num">07</span><span class="title">좋은 MCP 서버 만들기<span class="sub">팁 · 알고리즘 설계 지침</span></span></a></li>
+                <li><a href="08-railway-example.html"><span class="num">08</span><span class="title">철도 분야 예시<span class="sub">처음부터 끝까지 따라하기</span></span></a></li>
+                <li><a href="09-future-study.html"><span class="num">09</span><span class="title">향후 추가 학습<span class="sub">Streamable HTTP · 타언어 래핑</span></span></a></li>
+            </ol>
+        </nav>
+        <div class="sidebar-footer">
+            <div>v1.0 · 2026-04-24 기준</div>
+            <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
+                <span class="theme-label">다크 모드</span>
+            </button>
+        </div>
+    </aside>
+
+    <main class="content" role="main">
+        <div class="content-inner">
+
+            <nav class="breadcrumb" aria-label="경로">
+                <a href="index.html">홈</a>
+                <span class="sep">›</span>
+                <span>02. 개발 환경 설정</span>
+            </nav>
+
+            <h1 class="page-title">개발 환경 설정</h1>
+            <p class="page-lead">코드를 실행하려면 먼저 도구를 준비해야 합니다. Python 설치부터 MCP 서버 라이브러리 설치까지, Windows 기준으로 순서대로 따라와 주세요.</p>
+            <div class="page-meta">
+                <span class="chip">예상 학습 시간 · 20~30분</span>
+                <span class="chip chip-ghost">관리자 권한 필요할 수 있음</span>
+            </div>
+
+            <h2>준비할 도구 체크리스트</h2>
+            <p>이 장을 끝내면 아래 항목이 모두 갖춰집니다.</p>
+            <ul class="checklist">
+                <li>Python 3.11 이상</li>
+                <li>코드 에디터(Visual Studio Code)</li>
+                <li>가상환경(venv)</li>
+                <li>MCP 서버 라이브러리(<code>fastmcp</code>)</li>
+                <li>(선택) 호스트 프로그램 Claude Desktop</li>
+            </ul>
+
+            <h2>Step 1. Python 설치</h2>
+            <p>파이썬 공식 사이트에서 설치 파일을 받습니다.</p>
+            <ol>
+                <li><a href="https://www.python.org/downloads/" target="_blank" rel="noopener">python.org/downloads</a> 접속 → "Download Python 3.13" 등 최신 3.11+ 버전 선택.</li>
+                <li>내려받은 설치 파일을 실행합니다.</li>
+                <li><strong>매우 중요:</strong> 설치 첫 화면에서 <strong>"Add python.exe to PATH"</strong> 체크박스를 반드시 켜세요.</li>
+                <li>"Install Now" 클릭 → 완료 대기.</li>
+            </ol>
+            <div class="callout warn">
+                <span class="callout-title">가장 자주 빠뜨리는 실수</span>
+                <p>"Add python.exe to PATH"를 체크하지 않으면, 명령 프롬프트에서 <code>python</code>을 입력했을 때 "명령을 찾을 수 없습니다" 오류가 납니다. 이미 설치하셨다면 제어판에서 파이썬을 제거하고 다시 설치하거나, <a href="#trouble">하단 트러블슈팅</a>을 참고하세요.</p>
+            </div>
+
+            <h3>설치 확인</h3>
+            <p>Windows 검색창에 <strong>"cmd"</strong>를 입력해 명령 프롬프트를 엽니다. 그리고 아래 명령을 한 줄씩 입력해 보세요.</p>
+            <div class="code-wrap">
+                <div class="code-head"><span class="lang">bash</span></div>
+<pre><code>python --version
+pip --version</code></pre>
+            </div>
+            <p>아래처럼 나오면 성공입니다.</p>
+            <div class="code-wrap">
+                <div class="code-head"><span class="lang">출력 예시</span></div>
+<pre><code>Python 3.13.2
+pip 24.3.1 from C:\Users\...\site-packages\pip (python 3.13)</code></pre>
+            </div>
+
+            <details>
+                <summary>macOS 사용자</summary>
+                <p>macOS는 <code>python</code> 대신 <code>python3</code>, <code>pip</code> 대신 <code>pip3</code>로 부르는 경우가 많습니다. 설치는 <a href="https://brew.sh" target="_blank" rel="noopener">Homebrew</a>로 <code>brew install python@3.13</code> 한 줄이면 끝납니다.</p>
+            </details>
+
+            <h2>Step 2. 코드 에디터 설치</h2>
+            <p>코드는 메모장에서도 작성 가능하지만, <strong>Visual Studio Code(VS Code)</strong>를 쓰면 자동완성·오류 표시가 있어 훨씬 편합니다.</p>
+            <ol>
+                <li><a href="https://code.visualstudio.com/" target="_blank" rel="noopener">code.visualstudio.com</a>에서 Windows용 설치 파일 다운로드 → 설치.</li>
+                <li>VS Code 실행 후 왼쪽 "확장(Extensions)" 아이콘을 눌러 <strong>"Python"</strong> 확장(Microsoft 제공)을 검색해 설치.</li>
+            </ol>
+            <div class="callout tip">
+                <span class="callout-title">Claude Desktop도 함께</span>
+                <p>나중에 우리가 만든 MCP 서버를 Claude에서 실제로 써보려면 <a href="https://claude.ai/download" target="_blank" rel="noopener">Claude Desktop</a>을 미리 설치해 두면 좋습니다. 설치만 해두고, 설정은 <a href="04-mcp-structure.html">04장</a>에서 함께 진행합니다.</p>
+            </div>
+
+            <h2>Step 3. 프로젝트 폴더 만들기</h2>
+            <p>MCP 서버 하나를 담을 폴더를 새로 만듭니다. 경로는 여러분이 편한 곳이면 됩니다. 여기서는 예시로 <code>C:\mcp-first</code>를 사용하겠습니다.</p>
+            <div class="code-wrap">
+                <div class="code-head"><span class="lang">bash (cmd)</span></div>
+<pre><code>mkdir C:\mcp-first
+cd C:\mcp-first</code></pre>
+            </div>
+            <p>이후 모든 명령은 이 폴더 안에서 실행한다고 가정합니다.</p>
+
+            <h2>Step 4. 가상환경(venv) 만들기</h2>
+            <p><strong>왜 필요한가?</strong> 프로젝트마다 쓰는 라이브러리 버전이 다를 수 있습니다. 가상환경은 "프로젝트 전용 작은 방"을 만들어, 한 프로젝트의 설치가 다른 프로젝트에 영향을 주지 않게 격리해 줍니다. MCP 서버를 여러 개 만들 때 이 습관이 여러분을 구해 줍니다.</p>
+            <div class="code-wrap">
+                <div class="code-head"><span class="lang">bash (cmd, Windows)</span></div>
+<pre><code>python -m venv .venv
+.venv\Scripts\activate</code></pre>
+            </div>
+            <p>두 번째 명령 실행 후 프롬프트 맨 앞에 <code>(.venv)</code>가 붙으면 성공입니다.</p>
+            <div class="code-wrap">
+                <div class="code-head"><span class="lang">출력 예시</span></div>
+<pre><code>(.venv) C:\mcp-first&gt;</code></pre>
+            </div>
+            <details>
+                <summary>PowerShell 사용자 / macOS 사용자</summary>
+                <p><strong>PowerShell</strong>: <code>.venv\Scripts\Activate.ps1</code>. 만약 "스크립트 실행이 금지됨" 오류가 나면 PowerShell을 <strong>관리자 권한</strong>으로 열어 <code>Set-ExecutionPolicy -Scope CurrentUser RemoteSigned</code>를 한 번 실행한 뒤 다시 시도하세요.</p>
+                <p><strong>macOS/Linux</strong>: <code>source .venv/bin/activate</code></p>
+            </details>
+
+            <h2>Step 5. FastMCP 설치</h2>
+            <p>이제 본격적으로 MCP 서버 개발에 쓸 라이브러리 <strong>fastmcp</strong>를 설치합니다. 가상환경이 활성화된 상태에서 실행하세요.</p>
+            <div class="code-wrap">
+                <div class="code-head"><span class="lang">bash</span></div>
+<pre><code>pip install fastmcp</code></pre>
+            </div>
+            <p>수십 개의 메시지가 지나간 뒤 "Successfully installed ..."가 나오면 완료입니다. 설치 확인:</p>
+            <div class="code-wrap">
+                <div class="code-head"><span class="lang">bash</span></div>
+<pre><code>pip show fastmcp</code></pre>
+            </div>
+            <p>버전 정보가 출력되면 성공입니다.</p>
+
+            <div class="callout info">
+                <span class="callout-title">참고: fastmcp 와 공식 mcp 패키지의 관계</span>
+                <p>MCP Python 생태계에는 크게 두 패키지가 있습니다.</p>
+                <ul>
+                    <li><strong>fastmcp</strong>(이 가이드 기준) — 가장 먼저 등장한 고수준 프레임워크. 현재는 독립 프로젝트로 활발히 발전 중이며, OAuth·배포 도구 등 고급 기능까지 포함합니다.</li>
+                    <li><strong>mcp</strong>(공식 Python SDK, <code>pip install "mcp[cli]"</code>) — 공식 <code>modelcontextprotocol/python-sdk</code> 저장소가 제공. 내부에 <code>mcp.server.fastmcp.FastMCP</code>라는 거의 동일한 고수준 API가 포함되어 있습니다.</li>
+                </ul>
+                <p>두 패키지 모두 <code>@mcp.tool</code>로 도구를 등록하는 기본 API는 같습니다. 이 가이드는 설치 경로가 더 간결하고 문서가 친절한 <strong>fastmcp</strong>를 기준으로 설명합니다.</p>
+            </div>
+
+            <h2>Step 6. 동작 확인: 가장 작은 서버</h2>
+            <p>설치가 잘 되었는지 확인하기 위해 "인사말을 돌려주는 서버"를 5줄로 만들어 봅시다. 완벽히 이해할 필요는 없습니다. 지금은 <strong>실행이 되는지만</strong> 확인해 주세요.</p>
+
+            <p>VS Code에서 <code>C:\mcp-first</code> 폴더를 열고(<kbd>File</kbd> → <kbd>Open Folder</kbd>), <code>hello.py</code> 파일을 새로 만들어 아래 코드를 입력합니다.</p>
+            <div class="code-wrap">
+                <div class="code-head"><span class="lang">python · hello.py</span></div>
+<pre><code>from fastmcp import FastMCP
+
+mcp = FastMCP("hello-server")
+
+@mcp.tool
+def hello(name: str) -> str:
+    """이름을 받아 인사말을 반환합니다."""
+    return f"안녕하세요, {name}님!"
+
+if __name__ == "__main__":
+    mcp.run()</code></pre>
+            </div>
+
+            <p>명령 프롬프트에서 실행:</p>
+            <div class="code-wrap">
+                <div class="code-head"><span class="lang">bash</span></div>
+<pre><code>python hello.py</code></pre>
+            </div>
+            <p>아무 오류 메시지 없이 화면이 가만히 멈춰 있다면 <strong>성공</strong>입니다. 이 상태가 "서버가 요청을 기다리고 있는" 상태입니다. <kbd>Ctrl</kbd> + <kbd>C</kbd>로 종료하세요.</p>
+            <div class="callout tip">
+                <span class="callout-title">정상 동작인데 왜 아무것도 안 보일까?</span>
+                <p>MCP 서버는 기본적으로 <strong>표준입출력(stdio)</strong>으로 클라이언트와 통신합니다. 클라이언트(Claude Desktop 등)가 붙기 전에는 조용히 기다리는 게 정상이에요. 실제로 동작을 보려면 <a href="06-schema-inspection.html">06장의 MCP Inspector</a>가 필요합니다.</p>
+            </div>
+
+            <h2 id="trouble">자주 발생하는 오류와 대처</h2>
+            <details>
+                <summary>"'python'은(는) 내부 또는 외부 명령, 실행할 수 있는 프로그램... 이 아닙니다."</summary>
+                <p>PATH 문제입니다. 설치 시 "Add python.exe to PATH"를 체크하지 않은 경우. Python을 제거한 뒤 다시 설치하면서 체크박스를 켜는 방법이 가장 빠릅니다. 또는 설치 위치(<code>%LOCALAPPDATA%\Programs\Python\Python313</code>)를 시스템 환경 변수 Path에 직접 추가해도 됩니다.</p>
+            </details>
+            <details>
+                <summary>"pip install fastmcp" 에서 SSL 또는 프록시 오류</summary>
+                <p>사내 프록시 뒤에서 작업 중이라면, 사내 IT팀에서 안내한 <code>HTTP_PROXY</code>·<code>HTTPS_PROXY</code> 환경 변수를 설정하거나, <code>pip install --proxy http://user:pass@proxy.company:8080 fastmcp</code> 형태로 프록시를 명시하세요.</p>
+            </details>
+            <details>
+                <summary>".venv\Scripts\activate" 가 인식되지 않음 (PowerShell)</summary>
+                <p>PowerShell은 기본적으로 스크립트 실행이 제한되어 있습니다. <code>Set-ExecutionPolicy -Scope CurrentUser RemoteSigned</code>을 한 번 실행한 뒤 새 창을 여세요. 또는 cmd를 사용하면 이 문제는 없습니다.</p>
+            </details>
+            <details>
+                <summary>"ModuleNotFoundError: No module named 'fastmcp'"</summary>
+                <p>가상환경을 활성화하지 않은 채 실행하고 있기 때문입니다. 명령 프롬프트 맨 앞에 <code>(.venv)</code>가 붙어 있는지 확인하세요. 안 붙어 있다면 <code>.venv\Scripts\activate</code>부터.</p>
+            </details>
+
+            <div class="callout tip">
+                <span class="callout-title">중간 점검</span>
+                <p>여기까지 따라오셨다면 <strong>"Python이 설치되었고, fastmcp가 설치되었고, 아주 작은 서버가 실행되었다"</strong>는 뜻입니다. 훌륭합니다! 이제 다음 장에서 MCP 서버 코드에 꼭 필요한 Python 문법만 빠르게 짚고 갑니다.</p>
+            </div>
+
+            <nav class="pager" aria-label="페이지 이동">
+                <a class="prev" href="01-mcp-overview.html">
+                    <span class="dir">이전</span>
+                    <span class="label">← 01. MCP 개요와 필요성</span>
+                </a>
+                <a class="next" href="03-python-basics.html">
+                    <span class="dir">다음</span>
+                    <span class="label">03. Python 기초 문법 →</span>
+                </a>
+            </nav>
+
+        </div>
+    </main>
+</div>
+</body>
+</html>

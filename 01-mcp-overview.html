@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#4338ca">
+    <meta name="description" content="Model Context Protocol(MCP)이 무엇이고 왜 필요한지, 누구나 이해할 수 있도록 쉬운 비유로 설명합니다.">
+    <title>01. MCP 개요와 필요성 · Python MCP 서버 가이드</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <script defer src="assets/js/main.js"></script>
+</head>
+<body>
+<div class="progress-bar" aria-hidden="true"></div>
+
+<header class="topbar" role="banner">
+    <button class="icon-btn" type="button" data-sidebar-open aria-label="메뉴 열기">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+    <span class="brand">01. MCP 개요</span>
+    <button class="icon-btn" type="button" data-theme-toggle aria-label="다크 모드 전환" aria-pressed="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
+    </button>
+</header>
+
+<div class="sidebar-backdrop" data-sidebar-close aria-hidden="true"></div>
+
+<div class="layout">
+    <aside class="sidebar" id="sidebar" aria-label="가이드 목차">
+        <div class="sidebar-header">
+            <h2 class="sidebar-title">Python MCP 서버<br>가이드라인</h2>
+            <p class="sidebar-sub">초보자를 위한 한국어 단계별 가이드</p>
+        </div>
+        <nav aria-label="목차">
+            <ol>
+                <li><a href="index.html"><span class="num">00</span><span class="title">시작하기<span class="sub">가이드 소개 · 학습 경로</span></span></a></li>
+                <li><a href="01-mcp-overview.html"><span class="num">01</span><span class="title">MCP 개요와 필요성<span class="sub">무엇이며 왜 쓰는가</span></span></a></li>
+                <li><a href="02-dev-setup.html"><span class="num">02</span><span class="title">개발 환경 설정<span class="sub">Python · 에디터 · 패키지</span></span></a></li>
+                <li><a href="03-python-basics.html"><span class="num">03</span><span class="title">Python 기초 문법<span class="sub">꼭 필요한 만큼만</span></span></a></li>
+                <li><a href="04-mcp-structure.html"><span class="num">04</span><span class="title">MCP 서버 구조<span class="sub">Tools · Resources · Prompts</span></span></a></li>
+                <li><a href="05-fastmcp-tools.html"><span class="num">05</span><span class="title">FastMCP Tool 구현<span class="sub">코드 → 스키마 매핑</span></span></a></li>
+                <li><a href="06-schema-inspection.html"><span class="num">06</span><span class="title">스키마 확인·수정<span class="sub">MCP Inspector 사용법</span></span></a></li>
+                <li><a href="07-best-practices.html"><span class="num">07</span><span class="title">좋은 MCP 서버 만들기<span class="sub">팁 · 알고리즘 설계 지침</span></span></a></li>
+                <li><a href="08-railway-example.html"><span class="num">08</span><span class="title">철도 분야 예시<span class="sub">처음부터 끝까지 따라하기</span></span></a></li>
+                <li><a href="09-future-study.html"><span class="num">09</span><span class="title">향후 추가 학습<span class="sub">Streamable HTTP · 타언어 래핑</span></span></a></li>
+            </ol>
+        </nav>
+        <div class="sidebar-footer">
+            <div>v1.0 · 2026-04-24 기준</div>
+            <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
+                <span class="theme-label">다크 모드</span>
+            </button>
+        </div>
+    </aside>
+
+    <main class="content" role="main">
+        <div class="content-inner">
+
+            <nav class="breadcrumb" aria-label="경로">
+                <a href="index.html">홈</a>
+                <span class="sep">›</span>
+                <span>01. MCP 개요와 필요성</span>
+            </nav>
+
+            <h1 class="page-title">MCP 개요와 필요성</h1>
+            <p class="page-lead">MCP가 무엇이고, 왜 AI 시대에 새로운 "표준"이 필요한지부터 먼저 짚습니다. 비개발자도 알 수 있도록 생활 속 비유를 씁니다.</p>
+            <div class="page-meta">
+                <span class="chip">예상 학습 시간 · 10분</span>
+                <span class="chip chip-ghost">사전 지식 없음</span>
+            </div>
+
+            <h2>먼저 한 가지 비유부터</h2>
+            <p>유능한 <strong>요리사(LLM)</strong> 한 명을 고용했다고 상상해 봅시다. 이 요리사는 세상의 거의 모든 레시피를 외우고 있고, 한국어·영어도 자유롭게 구사합니다. 그런데 중요한 문제가 하나 있습니다.</p>
+            <div class="callout warn">
+                <span class="callout-title">요리사에게 없는 것</span>
+                <p>요리사에게는 <strong>주방 도구</strong>가 없습니다. 냉장고를 열어 재료를 확인할 수도 없고, 오븐을 켤 수도 없고, 주문장을 볼 수도 없습니다. 말(지식)만 잘할 뿐, <strong>실제 행동</strong>을 할 수 없는 겁니다.</p>
+            </div>
+            <p>LLM(Claude, ChatGPT 같은 AI)도 똑같습니다. 지식은 풍부하지만 다음과 같은 일은 <strong>직접</strong> 하지 못합니다.</p>
+            <ul>
+                <li>사내 데이터베이스에서 오늘의 열차 운행 상태를 조회하기</li>
+                <li>Excel 파일을 열어 특정 셀의 값을 읽기</li>
+                <li>내가 MATLAB으로 짜 둔 시뮬레이션을 실행하기</li>
+                <li>회사 시스템에 이메일을 보내기</li>
+            </ul>
+            <p>이 일들을 해내려면 요리사 손에 <strong>도구</strong>를 쥐어 줘야 합니다. 그런데 도구마다 모양·규격이 제각각이면 요리사가 도구를 쓰는 법을 매번 새로 배워야겠죠. 이 문제를 해결해 주는 표준이 바로 <strong>MCP</strong>입니다.</p>
+
+            <h2>MCP란 무엇인가요?</h2>
+            <p><strong>MCP(Model Context Protocol)</strong>는 AI 모델(LLM)이 외부 도구·데이터에 접근할 수 있도록 2024년 후반 Anthropic이 공개한 개방형 표준 프로토콜입니다. 2026년 현재 Claude, Cursor, VS Code 등 주요 AI 도구들이 공식적으로 지원합니다.</p>
+            <p>쉬운 한 줄 요약:</p>
+            <div class="callout info">
+                <span class="callout-title">한 줄 정의</span>
+                <p><strong>MCP는 "AI와 외부 도구를 이어주는 공용 어댑터"</strong>입니다. USB-C 포트처럼, 한 번만 규격에 맞게 만들어 두면 어떤 AI 앱에서도 그대로 꽂아 쓸 수 있습니다.</p>
+            </div>
+
+            <h2>왜 지금 MCP가 필요한가요?</h2>
+            <p>MCP가 등장하기 전에는, 예를 들어 "Claude에게 사내 DB를 연결" 하려면 Claude 전용 커넥터를, "ChatGPT에게 연결" 하려면 ChatGPT 전용 플러그인을 각각 따로 만들어야 했습니다. 같은 DB를 연결하는데도 말이죠.</p>
+            <div class="mapping-split">
+                <div class="side">
+                    <div class="side-head">MCP 이전 (N × M 통합 지옥)</div>
+<pre>AI 앱 3개  ×  도구 4개
+  = 12개의 커넥터를 각각 개발
+
+Claude  →  DB
+Claude  →  이메일
+Claude  →  MATLAB
+Claude  →  파일
+ChatGPT →  DB
+ChatGPT →  이메일
+ChatGPT →  MATLAB
+... (계속)</pre>
+                </div>
+                <div class="side">
+                    <div class="side-head">MCP 이후 (표준 하나)</div>
+<pre>도구 4개만 MCP 규격으로 만들면
+   어떤 AI 앱에서도 그대로 사용
+
+[MCP 서버: DB]
+[MCP 서버: 이메일]
+[MCP 서버: MATLAB]
+[MCP 서버: 파일]
+        ↑ ↑ ↑ ↑
+    Claude / Cursor / VS Code
+    / 다른 AI 앱 모두 공통 접속</pre>
+                </div>
+            </div>
+            <p>즉, <strong>"내가 만든 도구 하나를 여러 AI 앱이 공유"</strong>할 수 있게 되는 것이 MCP의 핵심 가치입니다.</p>
+
+            <h2>MCP의 세 가지 등장인물</h2>
+            <p>MCP를 이해하려면 세 역할을 구분해야 합니다. 이 가이드에서 우리는 <strong>서버</strong>를 직접 만들 겁니다.</p>
+            <div class="diagram">
+                <svg viewBox="0 0 720 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="호스트-클라이언트-서버 관계 다이어그램">
+                    <defs>
+                        <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                            <path d="M0 0 L10 5 L0 10 z" fill="#4338ca"/>
+                        </marker>
+                    </defs>
+                    <g font-family="Pretendard, sans-serif" font-size="14">
+                        <!-- Host -->
+                        <rect x="30" y="70" width="180" height="120" rx="14" fill="#eef2ff" stroke="#4338ca" stroke-width="1.5"/>
+                        <text x="120" y="110" text-anchor="middle" font-weight="700" fill="#1f2937">호스트 (Host)</text>
+                        <text x="120" y="135" text-anchor="middle" fill="#475569" font-size="12">예: Claude Desktop,</text>
+                        <text x="120" y="152" text-anchor="middle" fill="#475569" font-size="12">Cursor, VS Code</text>
+                        <text x="120" y="170" text-anchor="middle" fill="#64748b" font-size="11">AI 앱 자체</text>
+
+                        <!-- Client -->
+                        <rect x="270" y="90" width="180" height="80" rx="14" fill="#fff" stroke="#d97706" stroke-width="1.5"/>
+                        <text x="360" y="122" text-anchor="middle" font-weight="700" fill="#1f2937">클라이언트 (Client)</text>
+                        <text x="360" y="145" text-anchor="middle" fill="#475569" font-size="12">호스트 안에 내장됨</text>
+
+                        <!-- Server -->
+                        <rect x="510" y="40" width="180" height="80" rx="14" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"/>
+                        <text x="600" y="72" text-anchor="middle" font-weight="700" fill="#1f2937">서버 A (Server)</text>
+                        <text x="600" y="95" text-anchor="middle" fill="#475569" font-size="12">우리가 만드는 것!</text>
+
+                        <rect x="510" y="140" width="180" height="80" rx="14" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"/>
+                        <text x="600" y="172" text-anchor="middle" font-weight="700" fill="#1f2937">서버 B (Server)</text>
+                        <text x="600" y="195" text-anchor="middle" fill="#475569" font-size="12">다른 사람이 만든 서버</text>
+
+                        <!-- Arrows -->
+                        <line x1="210" y1="130" x2="270" y2="130" stroke="#4338ca" stroke-width="2" marker-end="url(#arr)" marker-start="url(#arr)"/>
+                        <line x1="450" y1="120" x2="510" y2="80" stroke="#4338ca" stroke-width="2" marker-end="url(#arr)" marker-start="url(#arr)"/>
+                        <line x1="450" y1="140" x2="510" y2="180" stroke="#4338ca" stroke-width="2" marker-end="url(#arr)" marker-start="url(#arr)"/>
+
+                        <text x="235" y="118" text-anchor="middle" font-size="11" fill="#4338ca">내부</text>
+                        <text x="480" y="95" text-anchor="middle" font-size="11" fill="#4338ca">MCP</text>
+                        <text x="480" y="165" text-anchor="middle" font-size="11" fill="#4338ca">MCP</text>
+                    </g>
+                </svg>
+                <div class="caption">호스트 안에는 MCP 클라이언트가 여러 개 있고, 각 클라이언트가 서버 하나씩과 통신합니다.</div>
+            </div>
+            <ul>
+                <li><strong>호스트(Host)</strong> — 사람이 쓰는 AI 앱. Claude Desktop, Cursor IDE, VS Code 확장 등.</li>
+                <li><strong>클라이언트(Client)</strong> — 호스트 안에 내장되어 있으며, 서버 하나하고만 MCP 대화를 나눕니다. 우리가 신경 쓸 필요는 없습니다.</li>
+                <li><strong>서버(Server)</strong> — 실제로 "능력"을 제공합니다. <strong>우리가 Python으로 만들려는 것이 바로 이 서버</strong>입니다.</li>
+            </ul>
+
+            <h2>MCP 서버가 제공하는 세 가지 능력</h2>
+            <p>MCP 서버는 AI에게 세 종류의 "능력"을 노출할 수 있습니다. 지금은 이름만 눈에 익혀 두면 됩니다. 상세 설명과 실제 코드는 <a href="04-mcp-structure.html">04장</a>에서 다룹니다.</p>
+            <div class="cards">
+                <article class="card">
+                    <span class="card-badge">TOOLS</span>
+                    <h4>도구 (Tools)</h4>
+                    <p>AI가 호출할 수 있는 "행동". 함수 호출과 같습니다. 예: <code>지금 3호선 열차 운행 상태 조회</code>. 가장 자주 쓰는 개념입니다.</p>
+                </article>
+                <article class="card">
+                    <span class="card-badge">RESOURCES</span>
+                    <h4>자원 (Resources)</h4>
+                    <p>AI가 읽어올 수 있는 "데이터 덩어리". 예: 역 목록 CSV, 운영 매뉴얼 PDF 등. 읽기 전용.</p>
+                </article>
+                <article class="card">
+                    <span class="card-badge">PROMPTS</span>
+                    <h4>프롬프트 (Prompts)</h4>
+                    <p>자주 쓰는 대화 템플릿을 미리 정의해서 AI에게 노출. 예: "장애 분석 리포트 양식".</p>
+                </article>
+            </div>
+
+            <h2>철도 엔지니어라면 이런 걸 만들 수 있어요</h2>
+            <p>이 가이드의 독자가 많을 것으로 예상되는 철도 분야를 예로 들어 봅니다. 모두 MCP 서버 하나로 구현 가능하며, 이 가이드의 <a href="08-railway-example.html">08장</a>에서 비슷한 예시를 직접 만들어 봅니다.</p>
+            <ol>
+                <li><strong>역/노선 정보 조회 서버</strong> — "강남역의 위도·경도와 인접 역을 알려줘"를 Claude가 물어오면 사내 DB에서 조회해 반환.</li>
+                <li><strong>시뮬레이션 실행 서버</strong> — 기존에 MATLAB으로 짜 둔 "역 간 소요시간 예측" 시뮬레이션을 AI가 직접 호출하도록 노출.</li>
+                <li><strong>유지보수 알림 서버</strong> — 설비 로그를 읽어 "최근 24시간 이상 징후" 요약을 AI가 받아갈 수 있게 함.</li>
+            </ol>
+
+            <h2>직접 만들면 무엇이 좋은가요?</h2>
+            <ul>
+                <li><strong>사내 데이터를 외부로 내보내지 않고</strong> AI 도구의 지능을 활용할 수 있습니다(로컬 실행 가능).</li>
+                <li>한 번 만들어 두면 <strong>Claude Desktop·Cursor·다른 MCP 호환 AI</strong>에서 모두 쓸 수 있습니다.</li>
+                <li>Python 함수 하나 수준의 간단한 작업도 그대로 "AI가 호출할 수 있는 능력"으로 변환됩니다.</li>
+                <li>나중에 다른 팀과 <strong>서버만 공유</strong>하면 그 팀도 즉시 활용할 수 있습니다.</li>
+            </ul>
+
+            <div class="callout tip">
+                <span class="callout-title">핵심 요약</span>
+                <p>MCP는 "AI를 위한 USB-C". 우리가 Python으로 <strong>MCP 서버</strong>를 만들면, Claude를 비롯한 여러 AI 앱이 그 기능을 동일한 방식으로 호출할 수 있게 됩니다.</p>
+            </div>
+
+            <nav class="pager" aria-label="페이지 이동">
+                <a class="prev" href="index.html">
+                    <span class="dir">이전</span>
+                    <span class="label">← 00. 시작하기</span>
+                </a>
+                <a class="next" href="02-dev-setup.html">
+                    <span class="dir">다음</span>
+                    <span class="label">02. 개발 환경 설정 →</span>
+                </a>
+            </nav>
+
+        </div>
+    </main>
+</div>
+</body>
+</html>
