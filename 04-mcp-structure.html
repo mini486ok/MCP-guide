@@ -201,22 +201,49 @@ if __name__ == "__main__":           # 5) 직접 실행될 때만
             <p>서버를 "Claude"에 붙이려면, Claude Desktop의 설정 파일에 "이 파일을 이렇게 실행해 달라"고 적어 주면 됩니다.</p>
             <h3>방법 1 — 자동 등록(추천)</h3>
             <p>FastMCP에는 Claude Desktop 설정을 자동으로 수정해 주는 편리한 명령이 있습니다.</p>
+            <div class="callout warn">
+                <span class="callout-title">먼저 <code>uv</code>가 설치돼 있어야 합니다</span>
+                <p>자동 등록이 만드는 설정은 서버를 <code>uv</code>로 실행합니다(아래 JSON의 <code>"command": "uv"</code> 참고). <strong><code>uv</code>가 PATH에 없으면 <code>fastmcp install</code> 자체는 성공해도, Claude Desktop을 다시 켰을 때 서버가 시작되지 않고 오류가 납니다.</strong></p>
+                <p>먼저 <code>uv</code>를 설치해 주세요. PowerShell에서:</p>
+                <div class="code-wrap">
+                    <div class="code-head"><span class="lang">powershell</span></div>
+<pre><code>powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"</code></pre>
+                </div>
+                <p>설치 후 <strong>새 터미널</strong>을 열고 <code>uv --version</code>이 버전을 출력하는지 확인합니다. 출력되지 않으면 PATH가 적용되지 않은 것이니 PC를 한 번 재시작하거나 시스템 환경변수에 <code>%USERPROFILE%\.local\bin</code>이 들어 있는지 확인하세요. <code>uv</code>를 깔고 싶지 않다면 아래 <strong>방법 2(수동 등록)</strong>로 넘어가도 됩니다.</p>
+            </div>
             <div class="code-wrap">
                 <div class="code-head"><span class="lang">bash</span></div>
 <pre><code>fastmcp install claude-desktop hello.py</code></pre>
             </div>
             <p>Claude Desktop을 <strong>완전히 종료했다가 다시 실행</strong>하면 "hello-server"가 도구 목록에 나타납니다.</p>
-
-            <h3>방법 2 — 수동 등록</h3>
-            <p>자동 등록이 안 되거나 원리를 확인하고 싶다면, Claude Desktop 설정 파일을 직접 편집합니다.</p>
-            <p>Windows: <code>%APPDATA%\Claude\claude_desktop_config.json</code></p>
-            <p>macOS: <code>~/Library/Application Support/Claude/claude_desktop_config.json</code></p>
+            <p>이 명령이 실제로 <code>claude_desktop_config.json</code>에 추가하는 항목은 대략 아래와 같은 모양입니다(아래 "방법 2"의 JSON과 <strong>다르다</strong>는 점에 주목하세요).</p>
             <div class="code-wrap">
-                <div class="code-head"><span class="lang">json · claude_desktop_config.json</span></div>
+                <div class="code-head"><span class="lang">json · 자동 등록이 만드는 항목</span></div>
 <pre><code>{
   "mcpServers": {
     "hello-server": {
-      "command": "python",
+      "command": "uv",
+      "args": [
+        "run", "--with", "fastmcp",
+        "fastmcp", "run",
+        "C:\\mcp-first\\hello.py"
+      ]
+    }
+  }
+}</code></pre>
+            </div>
+            <p>핵심은 <strong><code>uv</code>가 매 실행마다 임시 환경에 <code>fastmcp</code>를 격리 설치해서 서버를 띄운다</strong>는 점입니다. 그래서 자동 등록 방식은 우리가 만든 <code>.venv</code>를 사용하지 <strong>않습니다</strong>. 서버가 표준 라이브러리 외의 패키지(<code>requests</code>, 사내 라이브러리 등)를 쓴다면 <code>--with requests</code>처럼 의존성을 명시하거나, 아래 수동 등록을 쓰는 편이 안전합니다.</p>
+
+            <h3>방법 2 — 수동 등록</h3>
+            <p>자동 등록이 안 되거나, 우리가 만든 가상환경을 그대로 쓰고 싶다면, Claude Desktop 설정 파일을 직접 편집합니다.</p>
+            <p>Windows: <code>%APPDATA%\Claude\claude_desktop_config.json</code></p>
+            <p>macOS: <code>~/Library/Application Support/Claude/claude_desktop_config.json</code></p>
+            <div class="code-wrap">
+                <div class="code-head"><span class="lang">json · 수동 등록 (venv의 python을 직접 지정)</span></div>
+<pre><code>{
+  "mcpServers": {
+    "hello-server": {
+      "command": "C:\\mcp-first\\.venv\\Scripts\\python.exe",
       "args": ["C:\\mcp-first\\hello.py"]
     }
   }
@@ -224,7 +251,15 @@ if __name__ == "__main__":           # 5) 직접 실행될 때만
             </div>
             <div class="callout warn">
                 <span class="callout-title">경로 주의</span>
-                <p>Windows에서는 경로 구분자 <code>\</code>가 JSON에서 특수문자라서 <strong>두 번 겹쳐</strong>(<code>\\</code>) 적어야 합니다. 또는 <code>/</code>를 써도 됩니다. 가상환경 안의 Python을 정확히 지정하려면 <code>command</code>를 <code>C:\\mcp-first\\.venv\\Scripts\\python.exe</code>처럼 <strong>절대 경로</strong>로 주는 것이 안전합니다.</p>
+                <p>Windows에서는 경로 구분자 <code>\</code>가 JSON에서 특수문자라서 <strong>두 번 겹쳐</strong>(<code>\\</code>) 적어야 합니다. 또는 <code>/</code>를 써도 됩니다. <code>command</code>를 시스템 <code>python</code>이 아니라 <strong>가상환경 안의 <code>python.exe</code>의 절대 경로</strong>로 주는 게 핵심입니다. 그래야 우리가 <code>pip install fastmcp</code>로 깐 패키지를 그대로 사용할 수 있습니다.</p>
+            </div>
+            <div class="callout info">
+                <span class="callout-title">두 방법 중 무엇을 고를까</span>
+                <ul>
+                    <li><strong>자동 등록</strong>: 의존성을 매번 격리 설치하므로 깔끔하지만 시작이 약간 느리고, 서버에 추가 패키지가 필요하면 <code>--with</code> 옵션을 그때그때 챙겨야 합니다.</li>
+                    <li><strong>수동 등록</strong>: venv를 그대로 쓰므로 <code>pip install</code>로 추가한 패키지가 즉시 반영되고 시작이 빠릅니다. 대신 venv를 옮기거나 지우면 경로를 직접 수정해야 합니다.</li>
+                </ul>
+                <p>이 가이드의 후속 장(특히 08장 철도 예시)은 <strong>수동 등록</strong>을 기준으로 설명합니다.</p>
             </div>
 
             <h3>연결이 되면?</h3>

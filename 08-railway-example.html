@@ -103,12 +103,22 @@
             <h2>Step 1. 프로젝트 준비</h2>
             <p>02장에서 만든 프로젝트 폴더(<code>C:\mcp-first</code>)에 파일을 하나 추가합니다.</p>
             <div class="code-wrap">
-                <div class="code-head"><span class="lang">bash</span></div>
+                <div class="code-head"><span class="lang">cmd · Windows</span></div>
 <pre><code>cd C:\mcp-first
 .venv\Scripts\activate
 type nul &gt; railway_server.py
 code .</code></pre>
             </div>
+            <details>
+                <summary>macOS / Linux 사용자</summary>
+                <div class="code-wrap">
+                    <div class="code-head"><span class="lang">bash · macOS/Linux</span></div>
+<pre><code>cd ~/mcp-first
+source .venv/bin/activate
+touch railway_server.py
+code .</code></pre>
+                </div>
+            </details>
             <p>VS Code에서 <code>railway_server.py</code>를 열고, 아래 코드 조각들을 순서대로 붙여 나가면 됩니다.</p>
 
             <h2>Step 2. 데이터 모델 정의</h2>
@@ -177,8 +187,8 @@ TRAINS: list[Train] = [
 ]</code></pre>
             </div>
 
-            <h2>Step 4. 거리 계산 "코어 함수"</h2>
-            <p>07장에서 배운 대로, <strong>재사용 가능한 순수 함수</strong>로 먼저 분리합니다. 이 함수는 MCP와 무관하게 독립적으로 테스트 가능합니다.</p>
+            <h2>Step 4. 거리 계산 "코어 함수" + 역 이름 정규화</h2>
+            <p>07장에서 배운 대로, <strong>재사용 가능한 순수 함수</strong>로 먼저 분리합니다. 이 함수들은 MCP와 무관하게 독립적으로 테스트 가능합니다.</p>
             <div class="code-wrap">
                 <div class="code-head"><span class="lang">python</span></div>
 <pre><code>def _haversine_km(lat1: float, lng1: float, lat2: float, lng2: float) -&gt; float:
@@ -187,9 +197,28 @@ TRAINS: list[Train] = [
     dlat = radians(lat2 - lat1)
     dlng = radians(lng2 - lng1)
     a = sin(dlat / 2) ** 2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlng / 2) ** 2
-    return 2 * earth_radius_km * asin(sqrt(a))</code></pre>
+    return 2 * earth_radius_km * asin(sqrt(a))
+
+
+def _normalize_station(name: str) -&gt; str:
+    """'강남' / '강남역' 같은 입력 변형을 STATIONS 키로 정규화."""
+    if name in STATIONS:
+        return name
+    if name.endswith("역") and name[:-1] in STATIONS:
+        return name[:-1]
+    if (name + "역") in STATIONS:
+        return name + "역"
+    available = ", ".join(STATIONS.keys())
+    raise ValueError(
+        f"'{name}' 역은 이 서비스가 관리하는 역 목록에 없습니다. "
+        f"가능한 역: {available}"
+    )</code></pre>
             </div>
             <p>함수 이름 앞의 <code>_</code>는 "외부에 공개하지 않는 내부 함수"라는 관례입니다. MCP Tool은 <code>_</code>로 시작하지 않는 공개 함수들로 구성합니다.</p>
+            <div class="callout tip">
+                <span class="callout-title">왜 정규화 헬퍼가 필요할까</span>
+                <p>LLM(Claude)은 같은 역을 사람마다 다르게 부릅니다. "강남에서 잠실까지"라고 묻는 사람도 있고 "강남역에서 잠실역까지"라고 묻는 사람도 있죠. 데이터의 키와 표기가 한 글자라도 다르면 Tool이 빈 결과를 돌려주거나 오류를 내고, 그러면 LLM은 "정보가 없습니다"로 답을 마무리해 버립니다. 이 헬퍼 한 함수로 두 표기를 모두 받아주고, 매칭 실패 시 <strong>가능한 역 목록을 오류 메시지에 함께 노출</strong>해서 LLM이 다음 시도에서 자가복구할 수 있게 만듭니다(07장의 "오류 메시지를 LLM이 읽는다" 원칙).</p>
+            </div>
 
             <h2>Step 5. 서버 인스턴스 + 4개의 Tool</h2>
 
@@ -223,20 +252,23 @@ def list_stations(line: int | None = None) -&gt; list[Station]:
 def get_station_info(name: str) -&gt; Station:
     """역 이름으로 역 상세 정보를 조회합니다.
 
+    역 이름은 '강남' / '강남역' 둘 다 받습니다('역' 접미사 유무 무관).
+    어떤 역이 등록되어 있는지 확신이 없다면 먼저 list_stations()를 호출하세요.
+
     Args:
-        name: 조회할 역의 한글 이름(예: "강남").
+        name: 조회할 역의 한글 이름(예: "강남" 또는 "강남역").
 
     Returns:
         일치하는 Station 객체.
 
     Raises:
-        ValueError: 등록되지 않은 역 이름을 전달한 경우.
+        ValueError: 등록되지 않은 역 이름을 전달한 경우. 오류 메시지에
+            가능한 역 목록이 함께 포함됩니다.
     """
-    if name not in STATIONS:
-        raise ValueError(f"'{name}' 역은 이 서비스가 관리하는 역 목록에 없습니다.")
-    return STATIONS[name]</code></pre>
+    key = _normalize_station(name)
+    return STATIONS[key]</code></pre>
             </div>
-            <p>07장의 <strong>팁 4</strong>에 따라 오류 메시지를 한국어 문장으로 썼습니다. AI가 그 메시지를 그대로 받아 "대신 어떤 역을 조회할까요?"처럼 자연스럽게 이어갈 수 있습니다.</p>
+            <p>07장의 <strong>팁 4</strong>에 따라 오류 메시지를 한국어 문장으로 썼고, <strong>가능한 역 목록을 함께 돌려줍니다</strong>. AI가 그 메시지를 받아 "그럼 강남, 잠실 중에 어디를 보시겠어요?"처럼 자연스럽게 이어갈 수 있습니다.</p>
 
             <h3>Tool 3: distance_between</h3>
             <div class="code-wrap">
@@ -245,25 +277,27 @@ def get_station_info(name: str) -&gt; Station:
 def distance_between(station_a: str, station_b: str) -&gt; DistanceResult:
     """두 역 사이의 직선 거리(km)를 계산합니다.
 
+    역 이름은 '강남' / '강남역' 둘 다 받습니다('역' 접미사 유무 무관).
+
     Args:
         station_a: 첫 번째 역 이름.
         station_b: 두 번째 역 이름.
 
     Returns:
-        거리 정보(DistanceResult).
+        거리 정보(DistanceResult). departure/arrival 필드에는 정규화된
+        역 이름이 들어갑니다.
 
     Raises:
         ValueError: 둘 중 하나라도 등록되지 않은 역인 경우.
     """
-    for name in (station_a, station_b):
-        if name not in STATIONS:
-            raise ValueError(f"'{name}' 역은 관리되지 않는 역입니다.")
-    a = STATIONS[station_a]
-    b = STATIONS[station_b]
+    key_a = _normalize_station(station_a)
+    key_b = _normalize_station(station_b)
+    a = STATIONS[key_a]
+    b = STATIONS[key_b]
     km = _haversine_km(a.lat, a.lng, b.lat, b.lng)
     return DistanceResult(
-        departure=station_a,
-        arrival=station_b,
+        departure=key_a,
+        arrival=key_b,
         distance_km=round(km, 3),
     )</code></pre>
             </div>
@@ -279,19 +313,29 @@ def find_trains(
 ) -&gt; list[Train]:
     """출발역과 도착역이 일치하는 열차 시간표를 조회합니다.
 
+    역 이름은 '강남' / '강남역' 둘 다 받습니다('역' 접미사 유무 무관).
+    "가장 빠른 열차"를 묻는 질문이라면 sort_by="duration_min"으로 호출하세요
+    (기본값 'depart_time'은 가장 일찍 출발하는 순입니다).
+
     Args:
         departure: 출발역 이름.
         arrival: 도착역 이름.
-        sort_by: 결과 정렬 기준. 'depart_time'(기본) 또는 'duration_min'.
+        sort_by: 결과 정렬 기준. 'depart_time'(가장 일찍 출발 순) 또는
+            'duration_min'(가장 빠르게 도착 순).
 
     Returns:
         조건에 맞는 Train 객체 리스트. 일치 항목이 없으면 빈 리스트.
+
+    Raises:
+        ValueError: 출발/도착역 중 하나라도 등록되지 않은 역인 경우.
     """
-    results = [t for t in TRAINS if t.departure == departure and t.arrival == arrival]
+    dep = _normalize_station(departure)
+    arr = _normalize_station(arrival)
+    results = [t for t in TRAINS if t.departure == dep and t.arrival == arr]
     results.sort(key=lambda t: getattr(t, sort_by))
     return results</code></pre>
             </div>
-            <p><code>Literal["depart_time", "duration_min"]</code>로 쓴 덕분에 AI는 저 두 값 외에는 시도하지 않습니다. <strong>잘못된 정렬 기준이 들어올 가능성을 원천 차단</strong>했습니다.</p>
+            <p><code>Literal["depart_time", "duration_min"]</code>로 쓴 덕분에 AI는 저 두 값 외에는 시도하지 않습니다. <strong>잘못된 정렬 기준이 들어올 가능성을 원천 차단</strong>했습니다. 또 docstring 안에 "'가장 빠른'은 <code>duration_min</code>"이라고 적어두면, "아침에 가장 빠른 열차" 같은 질문이 와도 AI가 올바른 정렬 기준을 고를 가능성이 높아집니다.</p>
 
             <h2>Step 6. 실행</h2>
             <p>파일 맨 아래에 엔트리 포인트를 추가합니다.</p>
@@ -311,7 +355,7 @@ def find_trains(
             <p>06장에서 배운 대로 Inspector로 각 Tool의 스키마와 응답을 확인합니다.</p>
             <div class="code-wrap">
                 <div class="code-head"><span class="lang">bash</span></div>
-<pre><code>fastmcp dev railway_server.py</code></pre>
+<pre><code>fastmcp dev inspector railway_server.py</code></pre>
             </div>
             <p>브라우저에서 Inspector가 열리면 <strong>Tools 탭</strong>에서 4개 Tool이 보입니다. 아래 세 가지 시나리오를 꼭 돌려 보세요.</p>
             <div class="callout lab">
@@ -325,11 +369,13 @@ def find_trains(
 
             <h2>Step 8. Claude Desktop에 연결</h2>
             <p>이제 실제로 Claude가 이 서버를 쓸 수 있도록 연결합시다. 04장의 방법을 그대로 씁니다.</p>
+            <p><strong>방법 A — 자동 등록</strong>:</p>
             <div class="code-wrap">
                 <div class="code-head"><span class="lang">bash</span></div>
 <pre><code>fastmcp install claude-desktop railway_server.py</code></pre>
             </div>
-            <p>또는 수동으로 Claude Desktop 설정 파일 편집:</p>
+            <p>이 명령은 <code>uv</code>가 매 실행 시 임시 환경을 만들어 서버를 실행하도록 등록합니다. 우리가 만든 <code>.venv</code>를 사용하지 않습니다(자세한 내용은 <a href="04-mcp-structure.html#">04장</a> 참고).</p>
+            <p><strong>방법 B — 수동 등록(권장)</strong>: Claude Desktop 설정 파일을 직접 편집합니다. 이 예시는 우리가 만든 venv의 <code>python.exe</code>를 직접 가리키므로, <code>pydantic</code> 등 의존성을 따로 명시할 필요가 없습니다.</p>
             <div class="code-wrap">
                 <div class="code-head"><span class="lang">json · claude_desktop_config.json</span></div>
 <pre><code>{
@@ -340,6 +386,10 @@ def find_trains(
     }
   }
 }</code></pre>
+            </div>
+            <div class="callout warn">
+                <span class="callout-title">두 방법은 JSON이 다릅니다</span>
+                <p>방법 A로 자동 등록한 직후 위 JSON을 그대로 덮어쓰면 자동 등록 항목이 사라집니다. 두 방법 중 <strong>하나만</strong> 쓰세요. 자동 등록 결과가 어떻게 들어갔는지 궁금하면 <code>%APPDATA%\Claude\claude_desktop_config.json</code> 파일을 직접 열어 비교해 보세요.</p>
             </div>
             <p>Claude Desktop을 완전히 종료 → 재시작. 이제 Claude 대화창에서 이렇게 물어보세요.</p>
             <div class="callout tip">

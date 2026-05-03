@@ -78,6 +78,7 @@
                 <li>가상환경(venv)</li>
                 <li>MCP 서버 라이브러리(<code>fastmcp</code>)</li>
                 <li>(선택) 호스트 프로그램 Claude Desktop</li>
+                <li>(선택) <code>uv</code> — 04장의 <strong>자동 등록(<code>fastmcp install</code>)</strong>을 쓰려면 미리 설치돼 있어야 합니다. 수동 등록만 쓸 거라면 필요 없습니다.</li>
             </ul>
 
             <h2>Step 1. Python 설치</h2>
@@ -126,10 +127,19 @@ pip 24.3.1 from C:\Users\...\site-packages\pip (python 3.13)</code></pre>
             <h2>Step 3. 프로젝트 폴더 만들기</h2>
             <p>MCP 서버 하나를 담을 폴더를 새로 만듭니다. 경로는 여러분이 편한 곳이면 됩니다. 여기서는 예시로 <code>C:\mcp-first</code>를 사용하겠습니다.</p>
             <div class="code-wrap">
-                <div class="code-head"><span class="lang">bash (cmd)</span></div>
+                <div class="code-head"><span class="lang">cmd · Windows</span></div>
 <pre><code>mkdir C:\mcp-first
 cd C:\mcp-first</code></pre>
             </div>
+            <details>
+                <summary>macOS / Linux 사용자</summary>
+                <div class="code-wrap">
+                    <div class="code-head"><span class="lang">bash · macOS/Linux</span></div>
+<pre><code>mkdir -p ~/mcp-first
+cd ~/mcp-first</code></pre>
+                </div>
+                <p>이후 본문에 나오는 <code>C:\mcp-first</code>는 <code>~/mcp-first</code>로 바꿔 읽으세요.</p>
+            </details>
             <p>이후 모든 명령은 이 폴더 안에서 실행한다고 가정합니다.</p>
 
             <h2>Step 4. 가상환경(venv) 만들기</h2>
@@ -146,8 +156,19 @@ cd C:\mcp-first</code></pre>
             </div>
             <details>
                 <summary>PowerShell 사용자 / macOS 사용자</summary>
-                <p><strong>PowerShell</strong>: <code>.venv\Scripts\Activate.ps1</code>. 만약 "스크립트 실행이 금지됨" 오류가 나면 PowerShell을 <strong>관리자 권한</strong>으로 열어 <code>Set-ExecutionPolicy -Scope CurrentUser RemoteSigned</code>를 한 번 실행한 뒤 다시 시도하세요.</p>
-                <p><strong>macOS/Linux</strong>: <code>source .venv/bin/activate</code></p>
+                <p><strong>PowerShell</strong>:</p>
+                <div class="code-wrap">
+                    <div class="code-head"><span class="lang">PowerShell · Windows</span></div>
+<pre><code>python -m venv .venv
+.venv\Scripts\Activate.ps1</code></pre>
+                </div>
+                <p>만약 "스크립트 실행이 금지됨" 오류가 나면 PowerShell을 <strong>관리자 권한</strong>으로 열어 <code>Set-ExecutionPolicy -Scope CurrentUser RemoteSigned</code>를 한 번 실행한 뒤 다시 시도하세요.</p>
+                <p><strong>macOS / Linux</strong>:</p>
+                <div class="code-wrap">
+                    <div class="code-head"><span class="lang">bash · macOS/Linux</span></div>
+<pre><code>python3 -m venv .venv
+source .venv/bin/activate</code></pre>
+                </div>
             </details>
 
             <h2>Step 5. FastMCP 설치</h2>

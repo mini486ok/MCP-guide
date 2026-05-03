@@ -91,6 +91,30 @@ def _haversine_km(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
     return 2 * earth_radius_km * asin(sqrt(a))
 
 
+def _normalize_station(name: str) -> str:
+    """사용자가 부르는 다양한 표기를 STATIONS의 키로 정규화.
+
+    예) '강남역' → '강남', '서울' → '서울역'.
+    LLM이 자연스럽게 보내는 두 가지 변형('역' 접미사 유무)을 모두 받아
+    데이터의 키와 매칭시킨다.
+
+    Raises:
+        ValueError: 어느 형태로도 매칭되지 않을 때. 메시지에는 유효한 역
+            목록을 함께 노출해 LLM이 다음 시도에서 자가복구할 수 있게 한다.
+    """
+    if name in STATIONS:
+        return name
+    if name.endswith("역") and name[:-1] in STATIONS:
+        return name[:-1]
+    if (name + "역") in STATIONS:
+        return name + "역"
+    available = ", ".join(STATIONS.keys())
+    raise ValueError(
+        f"'{name}' 역은 이 서비스가 관리하는 역 목록에 없습니다. "
+        f"가능한 역: {available}"
+    )
+
+
 # ---------------------------------------------------------------------------
 # 4) MCP 서버 인스턴스 + Tool 정의
 # ---------------------------------------------------------------------------
@@ -117,43 +141,48 @@ def list_stations(line: int | None = None) -> list[Station]:
 def get_station_info(name: str) -> Station:
     """역 이름으로 역 상세 정보를 조회합니다.
 
+    역 이름은 '강남' / '강남역' 둘 다 받습니다('역' 접미사 유무 무관).
+    어떤 역이 등록되어 있는지 확신이 없다면 먼저 list_stations()를 호출하세요.
+
     Args:
-        name: 조회할 역의 한글 이름(예: "강남").
+        name: 조회할 역의 한글 이름(예: "강남" 또는 "강남역").
 
     Returns:
         일치하는 Station 객체.
 
     Raises:
-        ValueError: 등록되지 않은 역 이름을 전달한 경우.
+        ValueError: 등록되지 않은 역 이름을 전달한 경우. 오류 메시지에
+            가능한 역 목록이 함께 포함됩니다.
     """
-    if name not in STATIONS:
-        raise ValueError(f"'{name}' 역은 이 서비스가 관리하는 역 목록에 없습니다.")
-    return STATIONS[name]
+    key = _normalize_station(name)
+    return STATIONS[key]
 
 
 @mcp.tool
 def distance_between(station_a: str, station_b: str) -> DistanceResult:
     """두 역 사이의 직선 거리(km)를 계산합니다.
 
+    역 이름은 '강남' / '강남역' 둘 다 받습니다('역' 접미사 유무 무관).
+
     Args:
         station_a: 첫 번째 역 이름.
         station_b: 두 번째 역 이름.
 
     Returns:
-        거리 정보(DistanceResult).
+        거리 정보(DistanceResult). departure/arrival 필드에는 정규화된
+        역 이름이 들어갑니다.
 
     Raises:
         ValueError: 둘 중 하나라도 등록되지 않은 역인 경우.
     """
-    for name in (station_a, station_b):
-        if name not in STATIONS:
-            raise ValueError(f"'{name}' 역은 관리되지 않는 역입니다.")
-    a = STATIONS[station_a]
-    b = STATIONS[station_b]
+    key_a = _normalize_station(station_a)
+    key_b = _normalize_station(station_b)
+    a = STATIONS[key_a]
+    b = STATIONS[key_b]
     km = _haversine_km(a.lat, a.lng, b.lat, b.lng)
     return DistanceResult(
-        departure=station_a,
-        arrival=station_b,
+        departure=key_a,
+        arrival=key_b,
         distance_km=round(km, 3),
     )
 
@@ -166,17 +195,25 @@ def find_trains(
 ) -> list[Train]:
     """출발역과 도착역이 일치하는 열차 시간표를 조회합니다.
 
+    역 이름은 '강남' / '강남역' 둘 다 받습니다('역' 접미사 유무 무관).
+    "가장 빠른 열차"를 묻는 질문이라면 sort_by="duration_min"으로 호출하세요
+    (기본값 'depart_time'은 가장 일찍 출발하는 순입니다).
+
     Args:
         departure: 출발역 이름.
         arrival: 도착역 이름.
-        sort_by: 결과 정렬 기준. 'depart_time'(기본) 또는 'duration_min'.
+        sort_by: 결과 정렬 기준. 'depart_time'(가장 일찍 출발 순) 또는
+            'duration_min'(가장 빠르게 도착 순).
 
     Returns:
         조건에 맞는 Train 객체 리스트. 일치 항목이 없으면 빈 리스트.
+
+    Raises:
+        ValueError: 출발/도착역 중 하나라도 등록되지 않은 역인 경우.
     """
-    results = [
-        t for t in TRAINS if t.departure == departure and t.arrival == arrival
-    ]
+    dep = _normalize_station(departure)
+    arr = _normalize_station(arrival)
+    results = [t for t in TRAINS if t.departure == dep and t.arrival == arr]
     results.sort(key=lambda t: getattr(t, sort_by))
     return results
 

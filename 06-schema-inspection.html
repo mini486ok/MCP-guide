@@ -109,21 +109,34 @@ npx --version</code></pre>
             <p>FastMCP 자체가 Inspector를 함께 띄워 주는 편리한 커맨드를 제공합니다.</p>
             <div class="code-wrap">
                 <div class="code-head"><span class="lang">bash</span></div>
-<pre><code>fastmcp dev hello.py</code></pre>
+<pre><code>fastmcp dev inspector hello.py</code></pre>
             </div>
             <p>이 한 줄로:</p>
             <ol>
                 <li>Inspector를 자동으로 다운로드·실행합니다.</li>
                 <li>내 서버(<code>hello.py</code>)를 그 Inspector에 연결합니다.</li>
-                <li>브라우저가 자동으로 열립니다(열리지 않으면 터미널에 출력된 URL을 직접 여세요. 보통 <code>http://localhost:6274</code>).</li>
+                <li>브라우저가 자동으로 열립니다(열리지 않으면 터미널에 출력된 URL을 직접 여세요).</li>
             </ol>
+            <div class="callout warn">
+                <span class="callout-title">반드시 토큰이 포함된 URL로 여세요</span>
+                <p>최신 Inspector(0.16+)는 기본적으로 <strong>세션 토큰 인증</strong>을 사용합니다. 터미널을 보면 다음과 같은 줄이 출력됩니다.</p>
+                <div class="code-wrap">
+                    <div class="code-head"><span class="lang">출력 예시</span></div>
+<pre><code>🔗 Open inspector with token pre-filled:
+   http://localhost:6274/?MCP_PROXY_AUTH_TOKEN=abcd1234...</code></pre>
+                </div>
+                <p>이 <strong>토큰이 박힌 전체 URL</strong>을 클릭(또는 복사해서 브라우저에 붙여넣기)해야 합니다. 그냥 <code>http://localhost:6274</code>만 열면 좌측 메뉴까지는 보이지만 Connect / Tools / Resources 같은 버튼이 401로 거부되어 <strong>"클릭이 안 먹히는"</strong> 것처럼 보입니다.</p>
+            </div>
 
             <h4>방법 B — Inspector를 직접 실행</h4>
             <div class="code-wrap">
                 <div class="code-head"><span class="lang">bash</span></div>
 <pre><code>npx @modelcontextprotocol/inspector python hello.py</code></pre>
             </div>
-            <p>이때도 브라우저가 뜨고, 왼쪽에서 <strong>"Connect"</strong> 버튼을 누르면 우리 서버와 연결됩니다.</p>
+            <p>이때도 토큰이 박힌 URL이 동일하게 출력되니 그 URL을 여세요.</p>
+
+            <h4>공통 — Connect 버튼을 한 번 눌러야 합니다</h4>
+            <p>토큰 URL을 열면 좌측 사이드바에 <strong>Transport</strong>(<code>stdio</code>), <strong>Command</strong>(<code>python</code>), <strong>Arguments</strong>(<code>hello.py</code>)가 채워져 있습니다. 그 아래 <strong>"Connect"</strong> 버튼을 한 번 눌러야 우리 서버와 실제로 연결되고, 우측 Tools 탭이 활성화됩니다. 자동으로 연결되지 않으니 첫 진입 시 꼭 한 번 눌러 주세요.</p>
 
             <h2>화면 사용법</h2>
             <p>Inspector는 크게 좌측 네비게이션과 우측 상세 뷰로 나뉩니다. 한 번만 익혀두면 매일 쓰게 됩니다.</p>
@@ -225,7 +238,7 @@ npx --version</code></pre>
             </div>
 
             <h2>바뀌면 Inspector를 다시 열어야 하나?</h2>
-            <p><code>fastmcp dev</code>로 실행했다면, 코드를 저장하자마자 자동으로 서버가 재시작됩니다. Inspector 화면에서 해당 Tool을 다시 클릭하기만 하면 최신 스키마가 보입니다. 자동 재시작이 안 된다면 터미널을 <kbd>Ctrl</kbd> + <kbd>C</kbd>로 끝낸 뒤 다시 실행하세요.</p>
+            <p><code>fastmcp dev inspector</code>로 실행했다면, 코드를 저장하자마자 자동으로 서버가 재시작됩니다. Inspector 화면에서 해당 Tool을 다시 클릭하기만 하면 최신 스키마가 보입니다. 자동 재시작이 안 된다면 터미널을 <kbd>Ctrl</kbd> + <kbd>C</kbd>로 끝낸 뒤 다시 실행하세요.</p>
 
             <h2>CI/회귀 검증: CLI 모드</h2>
             <p>Inspector는 브라우저 UI뿐 아니라 명령행(CLI)에서도 동작합니다. 팀에서 Tool 스키마가 바뀌지 않는지 지속적으로 확인하고 싶을 때 유용합니다.</p>
